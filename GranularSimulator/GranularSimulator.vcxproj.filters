@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Control">
+      <UniqueIdentifier>{ca630382-8bc3-4fa7-be69-7dd52e3b5f26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Simulator">
+      <UniqueIdentifier>{df4440ca-9b28-472c-9a75-ae1777c7494b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine">
+      <UniqueIdentifier>{be0939df-b308-49d5-b37d-6b8db81f7f46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Assets">
+      <UniqueIdentifier>{e4a18378-7df8-4c4d-9875-ab444fead606}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Assets\Shaders">
+      <UniqueIdentifier>{6978b239-1d66-4179-8749-6e5cf9c092bc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\MouseController.cpp">
+      <Filter>Source Files\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\KeyboardController.cpp">
+      <Filter>Source Files\Control</Filter>
+    </ClCompile>
+    <ClCompile Include="GranularSubstance.cpp">
+      <Filter>Source Files\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="GranularSubstanceSimulator.cpp">
+      <Filter>Source Files\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="VoxelCollisionDetector.cpp">
+      <Filter>Source Files\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomGenerator.cpp">
+      <Filter>Source Files\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="GranularSimulatorEngine.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="GranularSimulatorWindow.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Control\KeyboardController.h">
+      <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="Control\MouseController.h">
+      <Filter>Source Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="GranularSubstanceSimulator.h">
+      <Filter>Source Files\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="GranularSubstance.h">
+      <Filter>Source Files\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomGenerator.h">
+      <Filter>Source Files\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelCollisionDetector.h">
+      <Filter>Source Files\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="GranularSimulatorEngine.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GranularSimulatorWindow.h">
+      <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Assets\Shaders\basic.frag">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\basic.vert">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\billboard.frag">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\billboard.vert">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\quad.frag">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\quad.vert">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\self_illuminated.frag">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\skybox.frag">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\skybox.vert">
+      <Filter>Resource Files\Assets\Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\sphere.obj">
+      <Filter>Resource Files\Assets</Filter>
+    </Resource>
+    <Resource Include="Assets\block.obj">
+      <Filter>Resource Files\Assets</Filter>
+    </Resource>
+  </ItemGroup>
+</Project>
