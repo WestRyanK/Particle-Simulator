@@ -1,6 +1,7 @@
 #include "GranularSubstanceSimulator.h"
 
 #include "RandomGenerator.h"
+#include <iostream>
 #include <unordered_set>
 
 
@@ -24,24 +25,26 @@ GranularSubstanceSimulator::GranularSubstanceSimulator(unsigned int frame_count,
 	this->initial_particle_velocities = new glm::vec3[particle_count];
 
 	float spacing_multiplier = 4.0f;
-	float particle_start_height = 0.5f;	// meters
-	float velocity = 0.5f;					// meter/second
+	float max_velocity = 0.5f;					// meter/second
 	int columns = 5;
-	for (unsigned int j = 0; j < (int)glm::ceil(this->particle_count / (float)columns); j++)
-	{
-		for (unsigned int i = 0; i < columns; ++i)
-		{
-			float x = i * particle_size * spacing_multiplier - (columns * particle_size * spacing_multiplier * 0.5f) + RandomGenerator::RandomBetween(0.0f, particle_size);
-			int index = i + j * columns;
+	float spacing = particle_size * spacing_multiplier;
+	float offset_distance = columns * spacing * 0.5f;
+	float start_height = 0.5f;
 
-			this->initial_particle_positions[index] = glm::vec3(x, particle_start_height + j * spacing_multiplier * particle_size, 0.0f);
-			this->initial_particle_velocities[index] = glm::vec3(0, 0, 0);
-			//this->initial_particle_velocities[i] = RandomGenerator::RandomVecBetween(-velocity, velocity, 0, velocity, 0, 0);
-			this->initial_particle_velocities[i] = RandomGenerator::RandomVecBetween(-velocity, velocity);
-		}
+
+	for (unsigned int i = 0; i < this->particle_count; ++i)
+	{
+		unsigned int ix = i % columns;
+		unsigned int iz = (i / columns) % columns;
+		unsigned int iy = (i / (columns * columns));
+
+		float x = ix * spacing - offset_distance;
+		float z = iz * spacing - offset_distance;
+		float y = iy * spacing + start_height;
+
+		this->initial_particle_positions[i] = glm::vec3(x, y, z);
+		this->initial_particle_velocities[i] = RandomGenerator::RandomVecBetween(-max_velocity, max_velocity);
 	}
-	//this->initial_particle_velocities[0] = glm::vec3(velocity, 0, 0);
-	//this->initial_particle_velocities[1] = glm::vec3(-velocity, 0, 0);
 }
 
 glm::vec3* GranularSubstanceSimulator::get_particle_positions_at(unsigned int t)
@@ -106,14 +109,15 @@ glm::vec3 GranularSubstanceSimulator::calculate_contact_force(glm::vec3 this_pos
 	return contact_force;
 }
 
-void GranularSubstanceSimulator::generate_timestep(unsigned int timestep, float dt)
+void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, float dt)
 {
-	this->particle_positions_simulation[timestep] = new glm::vec3[this->particle_count];
-	this->particle_velocities_simulation[timestep] = new glm::vec3[this->particle_count];
+	std::cout << "Simulating frame " << current_frame << " of " << this->frame_count << std::endl;
+	this->particle_positions_simulation[current_frame] = new glm::vec3[this->particle_count];
+	this->particle_velocities_simulation[current_frame] = new glm::vec3[this->particle_count];
 	for (unsigned int i = 0; i < this->particle_count; ++i)
 	{
-		glm::vec3 this_position = this->particle_positions_simulation[timestep - 1][i];
-		glm::vec3 this_velocity = this->particle_velocities_simulation[timestep - 1][i];
+		glm::vec3 this_position = this->particle_positions_simulation[current_frame - 1][i];
+		glm::vec3 this_velocity = this->particle_velocities_simulation[current_frame - 1][i];
 
 		std::unordered_set<unsigned int> possible_collisions = this->collision_detector.get_indices_in_voxel(this_position);
 
@@ -122,8 +126,8 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int timestep, float 
 		{
 			if (other_index != i) // We don't want a particle to collide with itself...
 			{
-				glm::vec3 other_position = this->particle_positions_simulation[timestep - 1][other_index];
-				glm::vec3 other_velocity = this->particle_velocities_simulation[timestep - 1][other_index];
+				glm::vec3 other_position = this->particle_positions_simulation[current_frame - 1][other_index];
+				glm::vec3 other_velocity = this->particle_velocities_simulation[current_frame - 1][other_index];
 				total_force += this->calculate_contact_force(this_position, this_velocity, other_position, other_velocity);
 			}
 		}
@@ -135,15 +139,15 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int timestep, float 
 		// right contact force
 		total_force += this->calculate_contact_force(this_position, this_velocity, glm::vec3(0.5f + this->particle_size, this_position.y, this_position.z), glm::vec3());
 		// front contact force
-		total_force += this->calculate_contact_force(this_position, this_velocity, glm::vec3(this_position.x, this_position.y, 0.1f + this->particle_size), glm::vec3());
+		total_force += this->calculate_contact_force(this_position, this_velocity, glm::vec3(this_position.x, this_position.y, 0.5f + this->particle_size), glm::vec3());
 		// back contact force
-		total_force += this->calculate_contact_force(this_position, this_velocity, glm::vec3(this_position.x, this_position.y, -0.1f - this->particle_size), glm::vec3());
+		total_force += this->calculate_contact_force(this_position, this_velocity, glm::vec3(this_position.x, this_position.y, -0.5f - this->particle_size), glm::vec3());
 
 		total_force += Fg;
 		
-		glm::vec3 new_this_velocity = this->particle_velocities_simulation[timestep - 1][i] + total_force / this->particle_mass * dt;
+		glm::vec3 new_this_velocity = this->particle_velocities_simulation[current_frame - 1][i] + total_force / this->particle_mass * dt;
 
-		glm::vec3 new_this_position = this->particle_positions_simulation[timestep - 1][i] + new_this_velocity * dt;
+		glm::vec3 new_this_position = this->particle_positions_simulation[current_frame - 1][i] + new_this_velocity * dt;
 
 		//if (new_this_position.y < this->particle_size)
 		//{
@@ -151,13 +155,18 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int timestep, float 
 		//	new_this_velocity.y = 0;
 		//}
 
-		this->particle_positions_simulation[timestep][i] = new_this_position;
-		this->particle_velocities_simulation[timestep][i] = new_this_velocity;
+		this->particle_positions_simulation[current_frame][i] = new_this_position;
+		this->particle_velocities_simulation[current_frame][i] = new_this_velocity;
 	}
 
 	for (unsigned int i = 0; i < this->particle_count; ++i)
 	{
-		this->collision_detector.update(i, this->particle_positions_simulation[timestep - 1][i], this->particle_positions_simulation[timestep][i]);
+		this->collision_detector.update(i, this->particle_positions_simulation[current_frame - 1][i], this->particle_positions_simulation[current_frame][i]);
+	}
+
+	if (current_frame >= this->frame_count - 1)
+	{
+		std::cout << "\a";
 	}
 }
 

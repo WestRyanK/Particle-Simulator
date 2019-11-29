@@ -5,6 +5,7 @@
 in vec3 world_position_2;
 in vec3 normal_2;
 in vec2 uv_2;
+flat in int instanceID;
 
 layout(location = 0) out vec4 color_out;
 
@@ -16,6 +17,23 @@ uniform int use_phong_highlight;
 uniform float phong_exponent;
 uniform vec3 phong_color;
 uniform vec3 object_color;
+uniform bool is_instanced;
+
+
+vec4 instanced_colors[12] = vec4[] (
+	vec4(1.0, 0.4, 0.4, 1.0),
+	vec4(1.0, 0.7, 0.4, 1.0),
+	vec4(1.0, 1.0, 0.4, 1.0),
+	vec4(0.7, 1.0, 0.4, 1.0),
+	vec4(0.4, 1.0, 0.4, 1.0),
+	vec4(0.4, 1.0, 0.4, 1.0),
+	vec4(0.4, 1.0, 0.7, 1.0),
+	vec4(0.4, 1.0, 1.0, 1.0),
+	vec4(0.4, 0.7, 1.0, 1.0),
+	vec4(0.4, 0.4, 1.0, 1.0),
+	vec4(0.7, 0.4, 1.0, 1.0),
+	vec4(1.0, 0.4, 1.0, 1.0)
+);
 
 uniform int directional_count;
 uniform struct directional_light
@@ -63,19 +81,26 @@ vec4 apply_directional(vec4 fragment_color, directional_light light)
 void main()
 {
     vec4 fragment_color;
-    if (material_type_id == 1)
-    {
-        fragment_color = vec4(object_color, 1.0f);
-    }
-    else if (material_type_id == 2)
-    {
-        fragment_color = vec4(object_color, 1.0f);
-        fragment_color = texture(texture_0, uv_2) * fragment_color;
-    }
-    else
-    {
-        fragment_color = vec4(1.0f, 0.0f, 0.5f, 1.0f);
-    }
+	if (!is_instanced)
+	{
+		if (material_type_id == 1)
+		{
+			fragment_color = vec4(object_color, 1.0f);
+		}
+		else if (material_type_id == 2)
+		{
+			fragment_color = vec4(object_color, 1.0f);
+			fragment_color = texture(texture_0, uv_2) * fragment_color;
+		}
+		else
+		{
+			fragment_color = vec4(1.0f, 0.0f, 0.5f, 1.0f);
+		}
+	}
+	else
+	{
+		fragment_color = instanced_colors[instanceID % 12];
+	}
 
     // color_out = vec3(0);
     color_out = vec4(0.0f);

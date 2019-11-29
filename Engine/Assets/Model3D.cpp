@@ -57,18 +57,56 @@ void Model3D::create_vao_ebo(mlMesh* mesh)
 	this->ebo_sizes.push_back((unsigned int)mesh->indices.size());
 }
 
-
 void Model3D::draw(mat4 transform, ShaderProgram* shader)
 {
 	for (unsigned int i = 0; i < this->vaos.size(); i++)
 	{
 		if (this->materials[i]->get_shader() == shader)
 		{
+			this->materials[i]->get_shader()->setUniform("is_instanced", false);
 			this->materials[i]->get_shader()->setUniform("object_transform", transform);
 			this->materials[i]->apply_material_to_shader();
 
 			glBindVertexArray(this->vaos[i]);
 			glDrawElements(GL_TRIANGLES, this->ebo_sizes[i], GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+		}
+	}
+}
+
+void Model3D::draw_instanced(mat4 transform, ShaderProgram* shader, mat4* instanced_transforms, unsigned int count)
+{
+	unsigned int instanced_buffer;
+	glGenBuffers(1, &instanced_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, instanced_buffer);
+	glBufferData(GL_ARRAY_BUFFER, count * sizeof(glm::mat4), &instanced_transforms[0], GL_DYNAMIC_DRAW);
+
+	for (unsigned int i = 0; i < this->vaos.size(); i++)
+	{
+		if (this->materials[i]->get_shader() == shader)
+		{
+			this->materials[i]->get_shader()->setUniform("is_instanced", true);
+			this->materials[i]->get_shader()->setUniform("object_transform", transform);
+			this->materials[i]->apply_material_to_shader();
+
+			glBindVertexArray(this->vaos[i]);
+			
+			const GLsizei vec4_size = sizeof(glm::vec4);
+			glEnableVertexAttribArray(INSTANCED_MAT_INDEX_1);
+			glVertexAttribPointer(INSTANCED_MAT_INDEX_1, 4, GL_FLOAT, GL_FALSE, 4 * VEC4_SIZE, (void*)(0 * VEC4_SIZE));
+			glEnableVertexAttribArray(INSTANCED_MAT_INDEX_2);
+			glVertexAttribPointer(INSTANCED_MAT_INDEX_2, 4, GL_FLOAT, GL_FALSE, 4 * VEC4_SIZE, (void*)(1 * VEC4_SIZE));
+			glEnableVertexAttribArray(INSTANCED_MAT_INDEX_3);
+			glVertexAttribPointer(INSTANCED_MAT_INDEX_3, 4, GL_FLOAT, GL_FALSE, 4 * VEC4_SIZE, (void*)(2 * VEC4_SIZE));
+			glEnableVertexAttribArray(INSTANCED_MAT_INDEX_4);
+			glVertexAttribPointer(INSTANCED_MAT_INDEX_4, 4, GL_FLOAT, GL_FALSE, 4 * VEC4_SIZE, (void*)(3 * VEC4_SIZE));
+
+			glVertexAttribDivisor(INSTANCED_MAT_INDEX_1, 1);
+			glVertexAttribDivisor(INSTANCED_MAT_INDEX_2, 1);
+			glVertexAttribDivisor(INSTANCED_MAT_INDEX_3, 1);
+			glVertexAttribDivisor(INSTANCED_MAT_INDEX_4, 1);
+
+			glDrawElementsInstanced(GL_TRIANGLES, this->ebo_sizes[i], GL_UNSIGNED_INT, 0, count);
 			glBindVertexArray(0);
 		}
 	}

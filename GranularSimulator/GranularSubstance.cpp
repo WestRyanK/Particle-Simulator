@@ -12,12 +12,11 @@ using namespace CodeMonkeys::Engine::Assets;
 using namespace CodeMonkeys::Engine::Objects;
 
 
-GranularSubstance::GranularSubstance(unsigned int frame_count, float timestep_size, unsigned int particle_count, float particle_size, float particle_mass, ShaderProgram* shader) :
-	Object3D(nullptr, "granular_substance_simulator"),
+GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, float timestep_size, unsigned int particle_count, float particle_size, float particle_mass, ShaderProgram* shader) :
+	InstancedObject3D(model, "granular_substance_simulator", particle_count),
 	frame_count(frame_count),
 	particle_count(particle_count),
 	particle_size(particle_size),
-	particles(nullptr),
 	timestep_size(timestep_size),
 	play_speed(1.0f),
 	current_time(0.0f),
@@ -36,30 +35,18 @@ GranularSubstance::GranularSubstance(unsigned int frame_count, float timestep_si
 		3.0f/2.0f,				//	beta			(#)
 		0.1f);					//	mu				(#)
 
-    this->ml_model = new mlModel();
-    LoadModel("Assets", "block.obj", *ml_model);
 
 	this->spawn_particles(shader);
 }
 
 void GranularSubstance::spawn_particles(ShaderProgram* shader)
 {
-	this->particles = new Object3D*[this->particle_count];
-	for (unsigned int i = 0; i < this->particle_count; i++)
-	{
-		std::vector<Material*> materials;
-		Material* material = new ColorMaterial(shader, false, 20.0f, glm::vec3(1.0f, 1.0f, 1.0f), RandomGenerator::RandomVecBetween(0.0f, 1.0f));
-		materials.push_back(material);
-		materials.push_back(material);
+	this->set_scale(2.0f * this->particle_size);
 
-		Model3D* particle_model = new Model3D(this->ml_model, materials);
-		this->particles[i] = new Object3D(particle_model, "particle");
-		this->particles[i]->set_scale(2.0f * this->particle_size);
-		this->add_child(this->particles[i]);
-	}
-
-	this->simulator->init_simulation(this->frame_count);
-	this->finished_simulating = false;
+	this->simulator->generate_simulation();
+	this->finished_simulating = true;
+	//this->simulator->init_simulation(this->frame_count);
+	//this->finished_simulating = false;
 }
 
 void GranularSubstance::update(float dt)
@@ -67,7 +54,6 @@ void GranularSubstance::update(float dt)
 	if (!this->finished_simulating)
 	{
 		this->current_frame++;
-		std::cout << "Simulating frame " << this->current_frame << " of " << this->frame_count << std::endl;
 		this->simulator->generate_timestep(this->current_frame, this->timestep_size);
 	}
 	else
@@ -85,7 +71,9 @@ void GranularSubstance::update(float dt)
 	glm::vec3* particle_positions = this->simulator->get_particle_positions_at(this->current_frame);
 	for (unsigned int i = 0; i < this->particle_count; i++)
 	{
-		this->particles[i]->set_position(particle_positions[i]);
+		glm::mat4 transform = mat4(1.0);
+		transform = glm::translate(transform, particle_positions[i]);
+		this->set_instanced_transform(i, transform);
 	}
 
 	this->current_time += dt;

@@ -142,7 +142,7 @@ void Object3D::update(float dt)
 
 void Object3D::draw(mat4 total_transform, ShaderProgram* shader)
 {
-    if (this->model != NULL)
+    if (this->model != nullptr)
     {
         this->model->draw(total_transform, shader);
     }

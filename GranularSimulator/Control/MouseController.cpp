@@ -13,10 +13,10 @@ void MouseController::get_mouse_delta(float* delta_x, float* delta_y)
     double position_x, position_y;
     glfwGetCursorPos(this->window, &position_x, &position_y);
 
-    *delta_x = position_x - (float)this->position_x_previous;
-    *delta_y = position_y - (float)this->position_y_previous;
-    this->position_x_previous = position_x;
-    this->position_y_previous = position_y;
+    *delta_x = (float)(position_x - this->position_x_previous);
+    *delta_y = (float)(position_y - this->position_y_previous);
+    this->position_x_previous = (float)position_x;
+    this->position_y_previous = (float)position_y;
 }
 
 void MouseController::handle_input(float dt)

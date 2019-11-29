@@ -17,6 +17,7 @@
 #include "Control/KeyboardController.h"
 #include "Control/MouseController.h"
 #include "GranularSubstance.h"
+#include "RandomGenerator.h"
 #include <stdlib.h>
 #include <vector>
 
@@ -44,10 +45,19 @@ void GranularSimulatorEngine::update_frame(float dt)
 
 void GranularSimulatorEngine::init_simulator(ShaderProgram* shader)
 {
+	std::vector<Material*> materials;
+	Material* material = new ColorMaterial(shader, false, 20.0f, glm::vec3(1.0f, 1.0f, 1.0f), RandomGenerator::RandomVecBetween(0.0f, 1.0f));
+	materials.push_back(material);
+	materials.push_back(material);
+	mlModel* ml_model = new mlModel();
+    LoadModel("Assets", "block.obj", *ml_model);
+	Model3D* model = new Model3D(ml_model, materials);
+
 	GranularSubstance* substance = new GranularSubstance(
-		1000,			//	frame_count		(#)
+		model,
+		750,			//	frame_count		(#)
 		0.002f,			//	timestep_size	(second) (50 frames/second)
-		100,				//	particle_count	(#)
+		750,				//	particle_count	(#)
 		0.04f,			//	particle_size	(meter) 
 0.25f,//0.00025f,		//	particle_mass	(kg)  (~1/10th of a penny)
 		shader);		//	material
@@ -90,7 +100,7 @@ void GranularSimulatorEngine::init()
     LoadModel("Assets", "block.obj", *ml_model);
 	Model3D* model = new Model3D(ml_model, materials);
 	Object3D* object = new Object3D(model, "object");
-	object->set_scale(glm::vec3(1.0f, 0.04f, 0.2f));
+	object->set_scale(glm::vec3(1.0f, 0.04f, 1.0f));
 	object->set_position(glm::vec3(0.0f, -0.02f, 0.0f));
 	this->world_root->add_child(object);
 

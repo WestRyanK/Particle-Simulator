@@ -170,6 +170,9 @@
     <ClCompile Include="Engine\GameEngine.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Objects\InstancedObject3D.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\DrawObjectsIterator.h">
@@ -312,6 +315,9 @@
     </ClInclude>
     <ClInclude Include="Dependencies\stb\stb_image.h">
       <Filter>Source Files\Dependencies\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="Objects\InstancedObject3D.h">
+      <Filter>Source Files\Objects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
