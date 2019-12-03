@@ -53,6 +53,9 @@
     <ClCompile Include="GranularSimulatorWindow.cpp">
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="GranularSimulationLoader.cpp">
+      <Filter>Source Files\Simulator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Control\KeyboardController.h">
@@ -78,6 +81,9 @@
     </ClInclude>
     <ClInclude Include="GranularSimulatorWindow.h">
       <Filter>Source Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GranularSimulationLoader.h">
+      <Filter>Source Files\Simulator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

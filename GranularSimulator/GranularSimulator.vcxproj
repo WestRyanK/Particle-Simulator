@@ -81,6 +81,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -92,6 +94,7 @@
   <ItemGroup>
     <ClCompile Include="Control\KeyboardController.cpp" />
     <ClCompile Include="Control\MouseController.cpp" />
+    <ClCompile Include="GranularSimulationLoader.cpp" />
     <ClCompile Include="GranularSimulatorEngine.cpp" />
     <ClCompile Include="GranularSimulatorWindow.cpp" />
     <ClCompile Include="GranularSubstance.cpp" />
@@ -108,6 +111,7 @@
     <ClInclude Include="GranularSubstanceSimulator.h" />
     <ClInclude Include="GranularSubstance.h" />
     <ClInclude Include="RandomGenerator.h" />
+    <ClInclude Include="GranularSimulationLoader.h" />
     <ClInclude Include="VoxelCollisionDetector.h" />
   </ItemGroup>
   <ItemGroup>

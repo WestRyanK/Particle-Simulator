@@ -22,13 +22,13 @@ GranularSimulatorWindow::GranularSimulatorWindow(int width, int height, bool ful
         glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-        window = glfwCreateWindow(mode->width, mode->height, "The Gauntlet", glfwGetPrimaryMonitor(), nullptr);
+        window = glfwCreateWindow(mode->width, mode->height, "Granular Simulator", glfwGetPrimaryMonitor(), nullptr);
         this->width = (float)mode->width;
         this->height = (float)mode->height;
     }
     else
     {
-        window = glfwCreateWindow(width, height, "The Gauntlet", nullptr, nullptr);
+        window = glfwCreateWindow(width, height, "Granular Simulator", nullptr, nullptr);
         this->width = (float)width;
         this->height = (float)height;
     }

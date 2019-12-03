@@ -4,6 +4,7 @@
 #include "../Engine/Assets/Model3D.h"
 #include "../Engine/Assets/ModelLoader.h"
 #include "../Engine/Objects/Billboard.h"
+#include "GranularSimulationLoader.h"
 #include "RandomGenerator.h"
 #include <iostream>
 
@@ -33,7 +34,7 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 		100000.0f,				//	kr				(??)
 		1.0f/2.0f,				//	alpha			(#)
 		3.0f/2.0f,				//	beta			(#)
-		0.1f);					//	mu				(#)
+		0.2f);					//	mu				(#)
 
 
 	this->spawn_particles(shader);
@@ -43,10 +44,11 @@ void GranularSubstance::spawn_particles(ShaderProgram* shader)
 {
 	this->set_scale(2.0f * this->particle_size);
 
-	this->simulator->generate_simulation();
+	this->simulator = GranularSimulationLoader::load_simuation("simulation.sim");
+	
+	//this->simulator->init_simulation();
+	//this->simulator->generate_simulation();
 	this->finished_simulating = true;
-	//this->simulator->init_simulation(this->frame_count);
-	//this->finished_simulating = false;
 }
 
 void GranularSubstance::update(float dt)
@@ -68,13 +70,16 @@ void GranularSubstance::update(float dt)
 		this->current_time = 0;
 	}
 
-	glm::vec3* particle_positions = this->simulator->get_particle_positions_at(this->current_frame);
+	glm::vec3* particle_positions = this->simulator->get_body_positions_at(this->current_frame);
+	//glm::mat4* particle_rotations = this->simulator->get_particle_rotations_at(this->current_frame);
 	for (unsigned int i = 0; i < this->particle_count; i++)
 	{
-		glm::mat4 transform = mat4(1.0);
+		glm::mat4 transform(1.0f);
 		transform = glm::translate(transform, particle_positions[i]);
 		this->set_instanced_transform(i, transform);
 	}
+
+	//delete particle_rotations;
 
 	this->current_time += dt;
 }
