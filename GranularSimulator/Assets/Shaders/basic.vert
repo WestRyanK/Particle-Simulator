@@ -18,7 +18,7 @@ void main()
 {
 	instanceID = gl_InstanceID;
 
-    normal_2 = (object_transform * vec4(normal_1, 0.0f)).xyz ;
+    normal_2 = normalize((object_transform * vec4(normal_1, 0.0f)).xyz);
     uv_2 = uv_1;
 	if (!is_instanced)
 	{

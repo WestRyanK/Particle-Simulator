@@ -55,9 +55,9 @@ void GranularSimulatorEngine::init_simulator(ShaderProgram* shader)
 
 	GranularSubstance* substance = new GranularSubstance(
 		model,
-		1000,			//	frame_count		(#)
+		750,			//	frame_count		(#)
 		0.002f,			//	timestep_size	(second) (50 frames/second)
-		2000,			//	particle_count	(#)
+		1000,			//	particle_count	(#)
 		0.04f,			//	particle_size	(meter) 
 0.25f,//0.00025f,		//	particle_mass	(kg)  (~1/10th of a penny)
 		shader);		//	material
@@ -83,10 +83,12 @@ void GranularSimulatorEngine::init()
 	this->camera->set_position(glm::vec3(0, 0, 1));
 	this->camera->set_look_at(glm::vec3(0, 0, 0));
 
-	auto ambient = new AmbientLight(vec3(1.0f, 1.0f, 1.0f), 0.9f);
+	auto ambient = new AmbientLight(vec3(1.0f, 1.0f, 1.0f), 0.3f);
 	this->lights.insert(ambient);
 
-    auto directional = new DirectionalLight(vec3(1.0f, 1.0f, 1.0f), 1.5f, vec3(2, -3, 1));
+    auto directional = new DirectionalLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(2, -3, -1));
+    this->lights.insert(directional);
+    directional = new DirectionalLight(vec3(1.0f, 1.0f, 1.0f), 0.5f, vec3(2, -3, 1));
     this->lights.insert(directional);
 
 	this->set_collision_detector(new SimpleCollisionDetector());
@@ -94,7 +96,7 @@ void GranularSimulatorEngine::init()
 	this->init_simulator(shader);
 
 	std::vector<Material*> materials;
-	Material* material = new ColorMaterial(shader, true, 20.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.2f, 0.2f, 0.8f));
+	Material* material = new ColorMaterial(shader, true, 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.2f, 0.2f, 0.8f));
 	materials.push_back(material);
     mlModel* ml_model = new mlModel();
     LoadModel("Assets", "block.obj", *ml_model);
