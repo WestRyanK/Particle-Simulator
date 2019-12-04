@@ -6,7 +6,7 @@ VoxelCollisionDetector::VoxelCollisionDetector(float grid_size) :
 
 }
 
-glm::ivec3 VoxelCollisionDetector::get_voxel_key(glm::vec3 position)
+glm::ivec3 VoxelCollisionDetector::get_voxel_key(glm::vec3 position) const
 {
 	glm::ivec3 key = glm::floor(position / this->grid_size);
 	return key;

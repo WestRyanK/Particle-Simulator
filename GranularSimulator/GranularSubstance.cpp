@@ -27,7 +27,6 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 	this->simulator = new GranularSubstanceSimulator(
 		this->frame_count,		//	frame_count		(#)
 		this->timestep_size,	//	timestep_size	(second)
-		this->particle_size,	//	particle_size	(meter)
 		particle_mass,			//	particle_mass	(kg)
 		200.0f,					//	kd				(??)
 		100000.0f,				//	kr				(??)

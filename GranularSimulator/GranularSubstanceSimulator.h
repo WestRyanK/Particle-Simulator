@@ -20,7 +20,7 @@ namespace CodeMonkeys::GranularSimulator
 	class GranularSubstanceSimulator
 	{
 	public:
-		GranularSubstanceSimulator(unsigned int frame_count, float timestep_size, float particle_size,  float particle_mass, float kd, float kr, float alpha, float beta, float mu);
+		GranularSubstanceSimulator(unsigned int frame_count, float timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu);
 		void generate_simulation();
 		const std::vector<glm::vec3>& get_particle_positions_at(unsigned int t) const;
 		const std::vector<glm::vec3>& get_body_positions_at(unsigned int t) const;
@@ -37,7 +37,6 @@ namespace CodeMonkeys::GranularSimulator
 		friend class GranularSimulationLoader;
 
 	private:
-		float max_particle_size;							// meters
 		float particle_mass;							// kg
 		float timestep_size;							// seconds
 		unsigned int frame_count;						// #   (total_time = frame_count * timestep_size)
@@ -71,7 +70,7 @@ namespace CodeMonkeys::GranularSimulator
 		std::vector<std::vector<glm::vec3>> particle_positions_simulation; // meters
 		std::vector<float> particle_sizes;
 
-		VoxelCollisionDetector collision_detector;
+		VoxelCollisionDetector* collision_detector = nullptr;
 
 
 		void calculate_contact_force_and_torque(float this_particle_size, glm::vec3 this_particle_position, glm::vec3 this_particle_velocity, glm::vec3 this_body_angular_velocity, glm::vec3 this_body_position, float other_particle_size, glm::vec3 other_particle_position, glm::vec3 other_particle_velocity, glm::vec3 other_body_angular_velocity, glm::vec3& out_force, glm::vec3& out_torque);

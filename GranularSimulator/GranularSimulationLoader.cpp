@@ -18,7 +18,6 @@ void GranularSimulationLoader::save_simulation(std::string filename, GranularSub
 	file << simulator->timestep_size << std::endl;
 	file << simulator->particle_count << std::endl;
 	file << simulator->body_count << std::endl;
-	file << simulator->max_particle_size << std::endl;
 	file << simulator->particle_mass << std::endl;
 	file << simulator->kd << std::endl;
 	file << simulator->kr << std::endl;
@@ -61,7 +60,6 @@ GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string
 	file >> timestep_size;
 	file >> particle_count;
 	file >> body_count;
-	file >> particle_size;
 	file >> particle_mass;
 	file >> kd;
 	file >> kr;
@@ -69,7 +67,7 @@ GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string
 	file >> beta;
 	file >> mu;
 
-	GranularSubstanceSimulator* simulator = new GranularSubstanceSimulator(frame_count, timestep_size, particle_size, particle_mass, kd, kr, alpha, beta, mu);
+	GranularSubstanceSimulator* simulator = new GranularSubstanceSimulator(frame_count, timestep_size, particle_mass, kd, kr, alpha, beta, mu);
 
 	for (unsigned int frame_index = 0; frame_index < frame_count; frame_index++)
 	{

@@ -27,5 +27,5 @@ public:
 	
 	std::unordered_set<unsigned int> get_indices_in_voxel(glm::vec3 position);
 
-	glm::ivec3 get_voxel_key(glm::vec3 position);
+	glm::ivec3 get_voxel_key(glm::vec3 position) const;
 };

@@ -4,17 +4,16 @@
 #include "BodyParticleGenerator.h"
 #include "RandomGenerator.h"
 #include <iostream>
+#include <algorithm>
 #include <unordered_set>
 
 
 using CodeMonkeys::GranularSimulator::GranularSubstanceSimulator;
 
-GranularSubstanceSimulator::GranularSubstanceSimulator(unsigned int frame_count, float timestep_size, float max_particle_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu) :
+GranularSubstanceSimulator::GranularSubstanceSimulator(unsigned int frame_count, float timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu) :
 	frame_count(frame_count),
-	max_particle_size(max_particle_size),
 	timestep_size(timestep_size),
 	particle_mass(particle_mass),
-	collision_detector(VoxelCollisionDetector(max_particle_size * 2.0f)),
 	kd(kd),
 	kr(kr),
 	alpha(alpha),
@@ -53,6 +52,18 @@ void GranularSubstanceSimulator::init_simulation(std::function<void(GranularSubs
 	this->particle_count = (unsigned int)initial_particle_positions.size();
 	this->particle_positions_simulation = std::vector<std::vector<glm::vec3>>(this->frame_count, std::vector<glm::vec3>(this->particle_count, glm::vec3()));
 	this->particle_positions_simulation[0] = initial_particle_positions;
+
+	float max_particle_size = *std::max_element(this->particle_sizes.begin(), this->particle_sizes.end());
+
+	if (this->collision_detector != nullptr)
+	{
+		delete this->collision_detector;
+	}
+	this->collision_detector = new VoxelCollisionDetector(max_particle_size * 2.0f);
+	for (unsigned int i = 0; i < this->initial_particle_positions.size(); i++)
+	{
+		this->collision_detector->insert(i, this->initial_body_positions[i]);
+	}
 }
 
 void GranularSubstanceSimulator::init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, glm::vec3 body_position, glm::vec3 body_velocity)
@@ -67,27 +78,19 @@ void GranularSubstanceSimulator::init_body(std::vector<glm::vec3> body_offsets, 
 
 	this->body_offsets.push_back(body_offsets);
 
-	for (unsigned int j = 0; j < body_offsets.size(); j++)
+	for (unsigned int i = 0; i < body_offsets.size(); i++)
 	{
 		this->particle_body_indices.push_back(body_index);
 		this->body_particle_indices[body_index].insert(this->particle_body_indices.size() - 1);
+
+		this->particle_sizes.push_back(body_particle_sizes[i]);
+		this->initial_particle_positions.push_back(body_offsets[i] + body_position);
 	}
 
 	this->initial_body_positions.push_back(body_position);
 	this->initial_body_rotations.push_back(glm::mat4(1.0f));
 	this->initial_body_angular_velocities.push_back(glm::vec3(0.0f));
 	this->initial_body_velocities.push_back(body_velocity);
-
-	unsigned int i = 0;
-	for (body_particle_index_it it = this->body_particle_indices[body_index].begin(); it != this->body_particle_indices[body_index].end(); it++)
-	{
-		glm::vec3 position = body_position + this->body_offsets[body_index][i];
-
-		this->initial_particle_positions.push_back(position);
-		this->particle_sizes.push_back(body_particle_sizes[i]);
-		this->collision_detector.insert(*it, position);
-		i++;
-	}
 }
 
 const std::vector<glm::vec3>& GranularSubstanceSimulator::get_body_positions_at(unsigned int t) const
@@ -198,7 +201,7 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 			glm::vec3 this_particle_position = this->particle_positions_simulation[current_frame - 1][this_particle_index];
 			float this_particle_size = this->particle_sizes[this_particle_index];
 
-			std::unordered_set<unsigned int> possible_collisions = this->collision_detector.get_indices_in_voxel(this_particle_position);
+			std::unordered_set<unsigned int> possible_collisions = this->collision_detector->get_indices_in_voxel(this_particle_position);
 
 			for (int other_particle_index : possible_collisions)
 			{
@@ -267,7 +270,7 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 
 	for (unsigned int i = 0; i < this->particle_count; ++i)
 	{
-		this->collision_detector.update(i, this->particle_positions_simulation[current_frame - 1][i], this->particle_positions_simulation[current_frame][i]);
+		this->collision_detector->update(i, this->particle_positions_simulation[current_frame - 1][i], this->particle_positions_simulation[current_frame][i]);
 	}
 
 	if (current_frame >= this->frame_count - 1)
