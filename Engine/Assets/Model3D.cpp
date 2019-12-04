@@ -110,6 +110,8 @@ void Model3D::draw_instanced(mat4 transform, ShaderProgram* shader, mat4* instan
 			glBindVertexArray(0);
 		}
 	}
+
+	glDeleteBuffers(1, &instanced_buffer);
 }
 
 Model3D* Model3D::clone()
