@@ -34,7 +34,7 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 		100000.0f,				//	kr				(??)
 		1.0f/2.0f,				//	alpha			(#)
 		3.0f/2.0f,				//	beta			(#)
-		0.2f);					//	mu				(#)
+		0.3f);					//	mu				(#)
 
 
 	this->spawn_particles(shader);
@@ -44,10 +44,9 @@ void GranularSubstance::spawn_particles(ShaderProgram* shader)
 {
 	this->set_scale(2.0f * this->particle_size);
 
-	this->simulator = GranularSimulationLoader::load_simuation("simulation.sim");
+	//this->simulator = GranularSimulationLoader::load_simuation("simulation.sim");
 	
-	//this->simulator->init_simulation();
-	//this->simulator->generate_simulation();
+	this->simulator->generate_simulation();
 	this->finished_simulating = true;
 }
 
@@ -70,7 +69,7 @@ void GranularSubstance::update(float dt)
 		this->current_time = 0;
 	}
 
-	glm::vec3* particle_positions = this->simulator->get_body_positions_at(this->current_frame);
+	std::vector<glm::vec3> particle_positions = this->simulator->get_body_positions_at(this->current_frame);
 	//glm::mat4* particle_rotations = this->simulator->get_particle_rotations_at(this->current_frame);
 	for (unsigned int i = 0; i < this->particle_count; i++)
 	{

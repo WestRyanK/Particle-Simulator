@@ -73,7 +73,7 @@ GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string
 
 	for (unsigned int frame_index = 0; frame_index < frame_count; frame_index++)
 	{
-		simulator->body_positions[frame_index] = new glm::vec3[body_count];
+		simulator->body_positions[frame_index] = std::vector<glm::vec3>(body_count);
 		for (unsigned int body_index = 0; body_index < body_count; body_index++)
 		{
 			float x;

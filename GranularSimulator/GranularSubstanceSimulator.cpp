@@ -1,6 +1,7 @@
 #include "GranularSubstanceSimulator.h"
 
 #include "GranularSimulationLoader.h"
+#include "BodyOffsets.h"
 #include "RandomGenerator.h"
 #include <iostream>
 #include <unordered_set>
@@ -22,67 +23,36 @@ GranularSubstanceSimulator::GranularSubstanceSimulator(unsigned int frame_count,
 	mu(mu),
 	Fg(particle_mass * glm::vec3(0.0f, -9.8f, 0.0f))
 {
-	this->particle_count = particle_count * PARTICLES_PER_BODY;
+	//this->particle_count = particle_count * PARTICLES_PER_BODY;
 
-	this->particle_positions_simulation = new glm::vec3*[this->frame_count];
-	this->particle_positions_simulation[0] = new glm::vec3[this->particle_count];
-	this->body_positions = new glm::vec3*[this->frame_count];
-	this->body_rotations = new glm::mat4 * [this->frame_count];
+	//this->particle_positions_simulation = new glm::vec3*[this->frame_count];
+	//this->body_positions = new glm::vec3*[this->frame_count];
+	//this->body_rotations = new glm::mat4 * [this->frame_count];
 
-	this->body_angular_velocities = new glm::vec3 * [2];
-	this->body_velocities = new glm::vec3 * [2];
-	for (unsigned int i = 0; i < 2; i++)
-	{
-		this->body_angular_velocities[i] = new glm::vec3[this->body_count];
-		this->body_velocities[i] = new glm::vec3[this->body_count];
-	}
+	//this->body_angular_velocities = new glm::vec3 * [2];
+	//this->body_velocities = new glm::vec3 * [2];
+	//for (unsigned int i = 0; i < 2; i++)
+	//{
+	//	this->body_angular_velocities[i] = new glm::vec3[this->body_count];
+	//	this->body_velocities[i] = new glm::vec3[this->body_count];
+	//}
 
-	this->particle_body_indices = new int[this->particle_count];
-	this->body_particle_indices = new std::set<int>[this->body_count];
-	this->body_offsets = new glm::vec3*[this->body_count];
-	float offset_scale = 1.0f;
-
-	for (unsigned int body_index = 0; body_index < this->body_count; body_index++)
-	{
-		this->body_particle_indices[body_index] = std::set<int>();
-
-		this->body_offsets[body_index] = new glm::vec3[PARTICLES_PER_BODY];
-
-		// Single Particles
-		//this->body_offsets[body_index][0] = glm::vec3(0.0f, 0.0f, 0.0f) * offset_scale * this->particle_size;
-
-		// Cube
-		//this->body_offsets[body_index][0] = glm::vec3(0.0f, 0.0f, 0.0f) * offset_scale * this->particle_size;
-		//this->body_offsets[body_index][1] = glm::vec3(1.0f, 1.0f, 1.0f) * offset_scale * this->particle_size;
-		//this->body_offsets[body_index][2] = glm::vec3(1.0f, 1.0f, -1.0f) * offset_scale * this->particle_size;
-		//this->body_offsets[body_index][3] = glm::vec3(-1.0f, 1.0f, -1.0f) * offset_scale * this->particle_size;
-		//this->body_offsets[body_index][4] = glm::vec3(-1.0f, 1.0f, 1.0f) * offset_scale * this->particle_size;
-		//this->body_offsets[body_index][5] = glm::vec3(1.0f, -1.0f, 1.0f) * offset_scale * this->particle_size;
-		//this->body_offsets[body_index][6] = glm::vec3(1.0f, -1.0f, -1.0f) * offset_scale * this->particle_size;
-		//this->body_offsets[body_index][7] = glm::vec3(-1.0f, -1.0f, -1.0f) * offset_scale * this->particle_size;
-		//this->body_offsets[body_index][8] = glm::vec3(-1.0f, -1.0f, 1.0f) * offset_scale * this->particle_size;
-
-		// Tetrahedron
-		this->body_offsets[body_index][0] = glm::vec3(1.0f, 0.0f, -1.0f / glm::sqrt(2.0f)) * offset_scale * this->particle_size;
-		this->body_offsets[body_index][1] = glm::vec3(-1.0f, 0.0f, -1.0f / glm::sqrt(2.0f)) * offset_scale * this->particle_size;
-		this->body_offsets[body_index][2] = glm::vec3(0.0f, 1.0f, 1.0f / glm::sqrt(2.0f)) * offset_scale * this->particle_size;
-		this->body_offsets[body_index][3] = glm::vec3(0.0f, -1.0f, 1.0f / glm::sqrt(2.0f)) * offset_scale * this->particle_size;
-
-		for (unsigned int j = 0; j < PARTICLES_PER_BODY; j++)
-		{
-			unsigned int particle_index = body_index * PARTICLES_PER_BODY + j;
-
-			this->body_particle_indices[body_index].insert(particle_index);
-			this->particle_body_indices[particle_index] = body_index;
-		}
-	}
+	//this->particles_per_body_counts = new int[this->body_count];
+	//this->particle_body_indices = new int[this->particle_count];
+	//this->body_particle_indices = new std::set<int>[this->body_count];
+	//this->body_offsets = new glm::vec3*[this->body_count];
 }
 
-void GranularSubstanceSimulator::init_simulation() { 
-	this->body_positions[0] = new glm::vec3[this->body_count];
-	this->body_rotations[0] = new glm::mat4[this->body_count];
+void GranularSubstanceSimulator::init_simulation() 
+{ 
+	std::vector<glm::vec3> initial_particle_positions;
+	this->body_positions = std::vector<std::vector<glm::vec3>>(this->frame_count, std::vector<glm::vec3>(this->body_count, glm::vec3()));
+	this->body_rotations = std::vector<std::vector<glm::mat4>>(this->frame_count, std::vector<glm::mat4>(this->body_count, glm::mat4()));
 
-	float spacing_multiplier = 3.0f; 
+	this->body_angular_velocities = std::vector<std::vector<glm::vec3>>(2, std::vector<glm::vec3>(this->body_count, glm::vec3()));
+	this->body_velocities = std::vector<std::vector<glm::vec3>>(2, std::vector<glm::vec3>(this->body_count, glm::vec3()));
+
+	float spacing_multiplier = 4.0f;
 	float max_velocity = 0.5f;					// meter/second 
 	int columns = 10; 
 	float spacing = this->particle_size * spacing_multiplier;
@@ -100,16 +70,31 @@ void GranularSubstanceSimulator::init_simulation() {
 		float z = iz * spacing - offset_distance;
 		float y = iy * spacing + start_height;
 
-		this->init_body(body_index, glm::vec3(x, y, z));
+		this->init_body(BodyOffsets::get_cube_grain(this->particle_size), glm::vec3(x, y, z), glm::vec3(0.0f), initial_particle_positions);
 	}
+
+	this->particle_count = initial_particle_positions.size();
+	this->particle_positions_simulation = std::vector<std::vector<glm::vec3>>(this->frame_count, std::vector<glm::vec3>(this->particle_count, glm::vec3()));
+	this->particle_positions_simulation[0] = initial_particle_positions;
 }
 
-void GranularSubstanceSimulator::init_body(unsigned int body_index, glm::vec3 body_position)
+void GranularSubstanceSimulator::init_body(std::vector<glm::vec3>* body_offsets, glm::vec3 body_position, glm::vec3 body_velocity, std::vector<glm::vec3>& initial_particle_positions)
 {
+	unsigned int body_index = this->body_particle_indices.size();
+	this->body_particle_indices.push_back(std::set<int>());
+
+	this->body_offsets.push_back(body_offsets);
+
+	for (unsigned int j = 0; j < body_offsets->size(); j++)
+	{
+		this->particle_body_indices.push_back(body_index);
+		this->body_particle_indices[body_index].insert(this->particle_body_indices.size() - 1);
+	}
+
 	for (unsigned int i = 0; i < 2; i++)
 	{
-		this->body_angular_velocities[i][body_index] = glm::vec3(0.0f);
-		this->body_velocities[i][body_index] = RandomGenerator::RandomVecBetween(-0.5f, 0.5f);
+		this->body_angular_velocities[i].push_back(glm::vec3(0.0f));
+		this->body_velocities[i].push_back(RandomGenerator::RandomVecBetween(-0.5f, 0.5f));
 	}
 
 	this->body_positions[0][body_index] = body_position;
@@ -118,33 +103,34 @@ void GranularSubstanceSimulator::init_body(unsigned int body_index, glm::vec3 bo
 	unsigned int i = 0;
 	for (body_particle_index_it it = this->body_particle_indices[body_index].begin(); it != this->body_particle_indices[body_index].end(); it++)
 	{
-		glm::vec3 position = body_position + this->body_offsets[body_index][i];
+		glm::vec3 position = body_position + (*this->body_offsets[body_index])[i];
 
-		this->particle_positions_simulation[0][*it] = position;
+		initial_particle_positions.push_back(position);
 		this->collision_detector.insert(*it, position);
 		i++;
 	}
 }
 
-glm::vec3* GranularSubstanceSimulator::get_body_positions_at(unsigned int t)
+const std::vector<glm::vec3>& GranularSubstanceSimulator::get_body_positions_at(unsigned int t) const
 {
 	return this->body_positions[t];
 }
 
-glm::vec3* GranularSubstanceSimulator::get_particle_positions_at(unsigned int t)
+const std::vector<glm::vec3>& GranularSubstanceSimulator::get_particle_positions_at(unsigned int t) const
 {
 	return this->particle_positions_simulation[t];
 }
 
-glm::mat4* GranularSubstanceSimulator::get_particle_rotations_at(unsigned int t)
+const std::vector<glm::mat4>& GranularSubstanceSimulator::get_particle_rotations_at(unsigned int t) const
 {
-	glm::mat4* particle_rotations = new glm::mat4[this->particle_count];
-	for (unsigned int i = 0; i < this->particle_count; i++)
-	{
-		particle_rotations[i] = this->body_rotations[t][this->particle_body_indices[i]];
-	}
+	//glm::mat4* particle_rotations = new glm::mat4[this->particle_count];
+	//for (unsigned int i = 0; i < this->particle_count; i++)
+	//{
+	//	particle_rotations[i] = this->body_rotations[t][this->particle_body_indices[i]];
+	//}
 
-	return particle_rotations;
+	//return particle_rotations;
+	return std::vector<glm::mat4>();
 }
 
 void GranularSubstanceSimulator::generate_simulation()
@@ -188,7 +174,8 @@ glm::vec3 GranularSubstanceSimulator::calculate_contact_force(glm::vec3 offset_t
 
 		if (tangent_velocity_magnitude > 0.0f)
 		{
-			glm::vec3 shear_force = -mu * normal_force_magnitude * tangent_velocity / glm::length(tangent_velocity);
+			//glm::vec3 shear_force = -glm::min(mu * normal_force_magnitude, this->kr * tangent_velocity_magnitude) * tangent_velocity / tangent_velocity_magnitude;
+			glm::vec3 shear_force = -mu * normal_force_magnitude * tangent_velocity / tangent_velocity_magnitude;
 			contact_force += shear_force;
 		}
 
@@ -201,9 +188,6 @@ glm::vec3 GranularSubstanceSimulator::calculate_contact_force(glm::vec3 offset_t
 void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, float dt)
 {
 	std::cout << "Simulating frame " << current_frame << " of " << this->frame_count << std::endl;
-	this->particle_positions_simulation[current_frame] = new glm::vec3[this->particle_count];
-	this->body_positions[current_frame] = new glm::vec3[this->body_count];
-	this->body_rotations[current_frame] = new glm::mat4[this->body_count];
 
 	glm::vec3 contact_force, contact_torque;
 	for (unsigned int this_body_index = 0; this_body_index < this->body_count; this_body_index++)
@@ -282,7 +266,7 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 		unsigned int i = 0;
 		for (body_particle_index_it it = body_particles.begin(); it != body_particles.end(); it++)
 		{
-			this->particle_positions_simulation[current_frame][*it] = this->body_positions[current_frame][this_body_index] + glm::vec3(this->body_rotations[current_frame][this_body_index] * glm::vec4(this->body_offsets[this_body_index][i], 0.0f));
+			this->particle_positions_simulation[current_frame][*it] = this->body_positions[current_frame][this_body_index] + glm::vec3(this->body_rotations[current_frame][this_body_index] * glm::vec4((*this->body_offsets[this_body_index])[i], 0.0f));
 			i++;
 		}
 	}

@@ -56,6 +56,9 @@
     <ClCompile Include="GranularSimulationLoader.cpp">
       <Filter>Source Files\Simulator</Filter>
     </ClCompile>
+    <ClCompile Include="BodyOffsets.cpp">
+      <Filter>Source Files\Simulator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Control\KeyboardController.h">
@@ -83,6 +86,9 @@
       <Filter>Source Files\Engine</Filter>
     </ClInclude>
     <ClInclude Include="GranularSimulationLoader.h">
+      <Filter>Source Files\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="BodyOffsets.h">
       <Filter>Source Files\Simulator</Filter>
     </ClInclude>
   </ItemGroup>
