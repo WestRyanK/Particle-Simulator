@@ -94,7 +94,7 @@
   <ItemGroup>
     <ClCompile Include="Control\KeyboardController.cpp" />
     <ClCompile Include="Control\MouseController.cpp" />
-    <ClCompile Include="BodyOffsets.cpp" />
+    <ClCompile Include="BodyParticleGenerator.cpp" />
     <ClCompile Include="GranularSimulationLoader.cpp" />
     <ClCompile Include="GranularSimulatorEngine.cpp" />
     <ClCompile Include="GranularSimulatorWindow.cpp" />
@@ -107,7 +107,7 @@
   <ItemGroup>
     <ClInclude Include="Control\KeyboardController.h" />
     <ClInclude Include="Control\MouseController.h" />
-    <ClInclude Include="BodyOffsets.h" />
+    <ClInclude Include="BodyParticleGenerator.h" />
     <ClInclude Include="GranularSimulatorEngine.h" />
     <ClInclude Include="GranularSimulatorWindow.h" />
     <ClInclude Include="GranularSubstanceSimulator.h" />

@@ -30,3 +30,11 @@ void InstancedObject3D::set_instanced_transform(unsigned int instanced_index, gl
 {
 	this->instanced_transforms[instanced_index] = transform;
 }
+
+void InstancedObject3D::set_instanced_count(unsigned int instanced_count)
+{
+	delete this->instanced_transforms;
+	
+	this->instanced_count = instanced_count;
+	this->instanced_transforms = new glm::mat4[instanced_count];
+}

@@ -42,7 +42,7 @@ namespace CodeMonkeys::GranularSimulator
 
 
 	public:
-		GranularSubstance(Model3D* model, unsigned int frame_count, float timestep_size, unsigned int particle_count, float particle_size, float particle_mass, ShaderProgram* shader);
+		GranularSubstance(Model3D* model, unsigned int frame_count, float timestep_size, float particle_size, float particle_mass, ShaderProgram* shader);
 		virtual void update(float dt);
 
 		// Inherited via IControllable

@@ -56,7 +56,7 @@
     <ClCompile Include="GranularSimulationLoader.cpp">
       <Filter>Source Files\Simulator</Filter>
     </ClCompile>
-    <ClCompile Include="BodyOffsets.cpp">
+    <ClCompile Include="BodyParticleGenerator.cpp">
       <Filter>Source Files\Simulator</Filter>
     </ClCompile>
   </ItemGroup>
@@ -88,7 +88,7 @@
     <ClInclude Include="GranularSimulationLoader.h">
       <Filter>Source Files\Simulator</Filter>
     </ClInclude>
-    <ClInclude Include="BodyOffsets.h">
+    <ClInclude Include="BodyParticleGenerator.h">
       <Filter>Source Files\Simulator</Filter>
     </ClInclude>
   </ItemGroup>

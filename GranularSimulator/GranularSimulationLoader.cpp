@@ -18,7 +18,7 @@ void GranularSimulationLoader::save_simulation(std::string filename, GranularSub
 	file << simulator->timestep_size << std::endl;
 	file << simulator->particle_count << std::endl;
 	file << simulator->body_count << std::endl;
-	file << simulator->particle_size << std::endl;
+	file << simulator->max_particle_size << std::endl;
 	file << simulator->particle_mass << std::endl;
 	file << simulator->kd << std::endl;
 	file << simulator->kr << std::endl;
@@ -69,16 +69,13 @@ GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string
 	file >> beta;
 	file >> mu;
 
-	GranularSubstanceSimulator* simulator = new GranularSubstanceSimulator(frame_count, timestep_size, particle_count, particle_size, particle_mass, kd, kr, alpha, beta, mu);
+	GranularSubstanceSimulator* simulator = new GranularSubstanceSimulator(frame_count, timestep_size, particle_size, particle_mass, kd, kr, alpha, beta, mu);
 
 	for (unsigned int frame_index = 0; frame_index < frame_count; frame_index++)
 	{
 		simulator->body_positions[frame_index] = std::vector<glm::vec3>(body_count);
 		for (unsigned int body_index = 0; body_index < body_count; body_index++)
 		{
-			float x;
-			float y;
-			float z;
 			file >> simulator->body_positions[frame_index][body_index].x;
 			file >> simulator->body_positions[frame_index][body_index].y;
 			file >> simulator->body_positions[frame_index][body_index].z;

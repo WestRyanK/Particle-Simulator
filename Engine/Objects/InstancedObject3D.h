@@ -17,6 +17,7 @@ namespace CodeMonkeys::Engine::Objects
 		virtual void update(float dt);
 		virtual void draw(mat4 total_transform, ShaderProgram* shader);
 		void set_instanced_transform(unsigned int instanced_index, glm::mat4 transform);
+		void set_instanced_count(unsigned int instanced_count);
 	};
 }
 #endif
