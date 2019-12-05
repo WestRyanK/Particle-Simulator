@@ -25,7 +25,15 @@ void GranularSimulationLoader::save_simulation(std::string filename, GranularSub
 	file << simulator->beta << std::endl;
 	file << simulator->mu << std::endl;
 
-	file << std::endl;
+	file << std::endl << std::endl;
+
+	for (unsigned int particle_index = 0; particle_index < simulator->particle_count; particle_index++)
+	{
+		file << simulator->particle_sizes[particle_index];
+	}
+
+	file << std::endl << std::endl << std::endl;
+
 	for (unsigned int frame_index = 0; frame_index < simulator->frame_count; frame_index++)
 	{
 		for (unsigned int body_index = 0; body_index < simulator->body_count; body_index++)
@@ -33,14 +41,23 @@ void GranularSimulationLoader::save_simulation(std::string filename, GranularSub
 			glm::vec3 body_position = simulator->body_positions[frame_index][body_index];
 			file << body_position.x << " " << body_position.y << " " << body_position.z << " ";
 		}
-		//file << std::endl;
+		file << std::endl;
+		for (unsigned int particle_index = 0; particle_index < simulator->particle_count; particle_index++)
+		{
+			glm::vec3 particle_position = simulator->particle_positions[frame_index][particle_index];
+			file << particle_position.x << " " << particle_position.y << " " << particle_position.z << " ";
+		}
+		file << std::endl << std::endl;
 	}
+
+	
 
 	file.close();
 }
 
 GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string filename)
 {
+	std::cout << "Loading simulation from file '" << filename << "'" << std::endl << std::endl;
 	std::ifstream file;
 	file.open(filename, std::ios::in);
 
@@ -68,20 +85,41 @@ GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string
 	file >> mu;
 
 	GranularSubstanceSimulator* simulator = new GranularSubstanceSimulator(frame_count, timestep_size, particle_mass, kd, kr, alpha, beta, mu);
+	
+	simulator->particle_count = particle_count;
+	simulator->body_count = body_count;
+	simulator->particle_sizes = std::vector<float>(particle_count, 0);
+	for (unsigned int particle_index = 0; particle_index < particle_count; particle_index++)
+	{
+		file >> simulator->particle_sizes[particle_index];
+	}
+
+
+	simulator->body_positions = std::vector<std::vector<glm::vec3>>(frame_count, std::vector<glm::vec3>(body_count, glm::vec3()));
+	simulator->particle_positions = std::vector<std::vector<glm::vec3>>(frame_count, std::vector<glm::vec3>(particle_count, glm::vec3()));
 
 	for (unsigned int frame_index = 0; frame_index < frame_count; frame_index++)
 	{
-		simulator->body_positions[frame_index] = std::vector<glm::vec3>(body_count);
 		for (unsigned int body_index = 0; body_index < body_count; body_index++)
 		{
 			file >> simulator->body_positions[frame_index][body_index].x;
 			file >> simulator->body_positions[frame_index][body_index].y;
 			file >> simulator->body_positions[frame_index][body_index].z;
 		}
+
+		for (unsigned int particle_index = 0; particle_index < particle_count; particle_index++)
+		{
+			file >> simulator->particle_positions[frame_index][particle_index].x;
+			file >> simulator->particle_positions[frame_index][particle_index].y;
+			file >> simulator->particle_positions[frame_index][particle_index].z;
+		}
+		std::cout << "Loaded frame " << frame_index << " of " << frame_count << " " << 100 * (frame_index / (float)frame_count) << "%" << std::endl;
 	}
 
 	
 	file.close();
+
+	std::cout << std::endl << std::endl << "Finished loading simulation from file" << std::endl;
 
 	return simulator;
 }
