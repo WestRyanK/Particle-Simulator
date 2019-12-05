@@ -9,7 +9,8 @@ namespace CodeMonkeys::GranularSimulator
 	class BodyParticleGenerator
 	{
 	private:
-		static const float CUBE_GRAIN_CORNER_RATIO;
+		static const float CUBE_GRAIN_CORNER_PARTICLE_RATIO;
+		static const float TETRAHEDRON_GRAIN_PARTICLE_RATIO;
 	public:
 		static std::vector<glm::vec3> get_tetrahedron_grain_offsets(float base_particle_size);
 		static std::vector<glm::vec3> get_cube_grain_offsets(float base_particle_size);
