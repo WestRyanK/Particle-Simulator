@@ -67,7 +67,7 @@ namespace CodeMonkeys::GranularSimulator
 		std::vector<glm::vec3> initial_body_angular_velocities;
 		std::vector<glm::vec3> initial_particle_positions;
 
-		std::vector<std::vector<glm::vec3>> particle_positions_simulation; // meters
+		std::vector<std::vector<glm::vec3>> particle_positions; // meters
 		std::vector<float> particle_sizes;
 
 		VoxelCollisionDetector* collision_detector = nullptr;

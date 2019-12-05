@@ -50,8 +50,8 @@ void GranularSubstanceSimulator::init_simulation(std::function<void(GranularSubs
 
 
 	this->particle_count = (unsigned int)initial_particle_positions.size();
-	this->particle_positions_simulation = std::vector<std::vector<glm::vec3>>(this->frame_count, std::vector<glm::vec3>(this->particle_count, glm::vec3()));
-	this->particle_positions_simulation[0] = initial_particle_positions;
+	this->particle_positions = std::vector<std::vector<glm::vec3>>(this->frame_count, std::vector<glm::vec3>(this->particle_count, glm::vec3()));
+	this->particle_positions[0] = initial_particle_positions;
 
 	float max_particle_size = *std::max_element(this->particle_sizes.begin(), this->particle_sizes.end());
 
@@ -62,7 +62,7 @@ void GranularSubstanceSimulator::init_simulation(std::function<void(GranularSubs
 	this->collision_detector = new VoxelCollisionDetector(max_particle_size * 2.0f);
 	for (unsigned int i = 0; i < this->initial_particle_positions.size(); i++)
 	{
-		this->collision_detector->insert(i, this->initial_body_positions[i]);
+		this->collision_detector->insert(i, this->initial_particle_positions[i]);
 	}
 }
 
@@ -100,7 +100,7 @@ const std::vector<glm::vec3>& GranularSubstanceSimulator::get_body_positions_at(
 
 const std::vector<glm::vec3>& GranularSubstanceSimulator::get_particle_positions_at(unsigned int t) const
 {
-	return this->particle_positions_simulation[t];
+	return this->particle_positions[t];
 }
 
 const std::vector<glm::mat4>& GranularSubstanceSimulator::get_particle_rotations_at(unsigned int t) const
@@ -141,12 +141,16 @@ void GranularSubstanceSimulator::generate_simulation()
 void GranularSubstanceSimulator::calculate_contact_force_and_torque(float this_particle_size, glm::vec3 this_particle_position, glm::vec3 this_particle_velocity, glm::vec3 this_body_angular_velocity, glm::vec3 this_body_position, float other_particle_size, glm::vec3 other_particle_position, glm::vec3 other_particle_velocity, glm::vec3 other_body_angular_velocity, glm::vec3& out_force, glm::vec3& out_torque)
 {
 	glm::vec3 offset = other_particle_position - this_particle_position;
-	glm::vec3 contact_offset = offset * 0.5f;
-	glm::vec3 this_contact_velocity = this_particle_velocity + glm::cross(this_body_angular_velocity, contact_offset);
-	glm::vec3 other_contact_velocity = other_particle_velocity + glm::cross(other_body_angular_velocity, -contact_offset);
+	//glm::vec3 this_contact_offset = offset * (this_particle_size / (this_particle_size + other_particle_size));
+	//glm::vec3 other_contact_offset = offset - this_contact_offset;
+	glm::vec3 this_contact_offset = offset * 0.5f;
+	glm::vec3 other_contact_offset = this_contact_offset;
+
+	glm::vec3 this_contact_velocity = this_particle_velocity + glm::cross(this_body_angular_velocity, this_contact_offset);
+	glm::vec3 other_contact_velocity = other_particle_velocity + glm::cross(other_body_angular_velocity, -other_contact_offset);
 
 	out_force = this->calculate_contact_force(this_particle_size, other_particle_size, offset, this_contact_velocity, other_contact_velocity);
-	out_torque = glm::cross((contact_offset + this_particle_position) - this_body_position, out_force);
+	out_torque = glm::cross((this_contact_offset + this_particle_position) - this_body_position, out_force);
 }
 
 glm::vec3 GranularSubstanceSimulator::calculate_contact_force(float this_particle_size, float other_particle_size, glm::vec3 offset_this_to_other, glm::vec3 this_velocity, glm::vec3 other_velocity)
@@ -198,7 +202,7 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 		for (body_particle_index_it it = body_particles.begin(); it != body_particles.end(); it++)
 		{
 			unsigned int this_particle_index = *it;
-			glm::vec3 this_particle_position = this->particle_positions_simulation[current_frame - 1][this_particle_index];
+			glm::vec3 this_particle_position = this->particle_positions[current_frame - 1][this_particle_index];
 			float this_particle_size = this->particle_sizes[this_particle_index];
 
 			std::unordered_set<unsigned int> possible_collisions = this->collision_detector->get_indices_in_voxel(this_particle_position);
@@ -209,7 +213,7 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 				if (other_body_index != this_body_index) // We don't want a particle to collide with another particle in its own rigid body...
 				{
 					float other_particle_size = this->particle_sizes[other_particle_index];
-					glm::vec3 other_particle_position = this->particle_positions_simulation[current_frame - 1][other_particle_index];
+					glm::vec3 other_particle_position = this->particle_positions[current_frame - 1][other_particle_index];
 					glm::vec3 other_body_velocity = this->body_velocities[this->previous_state_index][other_body_index];
 					glm::vec3 other_body_angular_velocity = this->body_angular_velocities[this->previous_state_index][other_body_index];
 
@@ -244,12 +248,17 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 			total_body_force += Fg;
 		}
 
-		glm::vec3 new_this_body_velocity = this->body_velocities[this->previous_state_index][this_body_index] + total_body_force / this->particle_mass * dt; // a = F/m       v' = v + a * dt
-		glm::vec3 new_this_body_position = this->body_positions[current_frame - 1][this_body_index] + new_this_body_velocity * dt;   // p' = p + v * dt
+		glm::vec3 previous_this_body_velocity = this->body_velocities[this->previous_state_index][this_body_index];
+		glm::vec3 new_this_body_velocity = previous_this_body_velocity + total_body_force / this->particle_mass * dt; // a = F/m       v' = v + a * dt
+		glm::vec3 avg_this_body_velocity = (previous_this_body_velocity + new_this_body_velocity) * 0.5f;
+		glm::vec3 new_this_body_position = this->body_positions[current_frame - 1][this_body_index] + avg_this_body_velocity * dt;   // p' = p + v * dt
 
-		glm::vec3 new_this_body_angular_velocity = this->body_angular_velocities[this->previous_state_index][this_body_index] + total_body_torque / this->particle_mass * dt; // a = T/I      // w' = w + a * dt
+		glm::vec3 previous_this_body_angular_velocity = this->body_angular_velocities[this->previous_state_index][this_body_index];
+		glm::vec3 new_this_body_angular_velocity = previous_this_body_angular_velocity + total_body_torque / this->particle_mass * dt; // a = T/I      // w' = w + a * dt
+		glm::vec3 avg_this_body_angular_velocity = (previous_this_body_angular_velocity + new_this_body_angular_velocity) * 0.5f;
 		glm::mat4 new_this_body_rotation = this->body_rotations[current_frame - 1][this_body_index];
-		float new_this_body_angular_velocity_magnitude = glm::length(new_this_body_angular_velocity);
+
+		float new_this_body_angular_velocity_magnitude = glm::length(avg_this_body_angular_velocity);
 		if (new_this_body_angular_velocity_magnitude > 0.0f)
 		{
 			new_this_body_rotation = glm::rotate(new_this_body_rotation, new_this_body_angular_velocity_magnitude, new_this_body_angular_velocity);  // theta
@@ -263,14 +272,14 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 		unsigned int i = 0;
 		for (body_particle_index_it it = body_particles.begin(); it != body_particles.end(); it++)
 		{
-			this->particle_positions_simulation[current_frame][*it] = this->body_positions[current_frame][this_body_index] + glm::vec3(this->body_rotations[current_frame][this_body_index] * glm::vec4(this->body_offsets[this_body_index][i], 0.0f));
+			this->particle_positions[current_frame][*it] = this->body_positions[current_frame][this_body_index] + glm::vec3(this->body_rotations[current_frame][this_body_index] * glm::vec4(this->body_offsets[this_body_index][i], 0.0f));
 			i++;
 		}
 	}
 
 	for (unsigned int i = 0; i < this->particle_count; ++i)
 	{
-		this->collision_detector->update(i, this->particle_positions_simulation[current_frame - 1][i], this->particle_positions_simulation[current_frame][i]);
+		this->collision_detector->update(i, this->particle_positions[current_frame - 1][i], this->particle_positions[current_frame][i]);
 	}
 
 	if (current_frame >= this->frame_count - 1)

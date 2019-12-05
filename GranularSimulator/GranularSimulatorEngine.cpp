@@ -50,12 +50,12 @@ void GranularSimulatorEngine::init_simulator(ShaderProgram* shader)
 	materials.push_back(material);
 	materials.push_back(material);
 	mlModel* ml_model = new mlModel();
-    LoadModel("Assets", "sphere.obj", *ml_model);
+    LoadModel("Assets", "block.obj", *ml_model);
 	Model3D* model = new Model3D(ml_model, materials);
 
 	GranularSubstance* substance = new GranularSubstance(
 		model,
-		400,			//	frame_count		(#)
+		700,			//	frame_count		(#)
 		0.002f,			//	timestep_size	(second) (50 frames/second)
 		0.04f,			//	particle_size	(meter) 
 0.25f,//0.00025f,		//	particle_mass	(kg)  (~1/10th of a penny)
