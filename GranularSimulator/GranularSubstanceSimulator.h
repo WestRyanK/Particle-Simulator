@@ -75,5 +75,7 @@ namespace CodeMonkeys::GranularSimulator
 
 		void calculate_contact_force_and_torque(float this_particle_size, glm::vec3 this_particle_position, glm::vec3 this_particle_velocity, glm::vec3 this_body_angular_velocity, glm::vec3 this_body_position, float other_particle_size, glm::vec3 other_particle_position, glm::vec3 other_particle_velocity, glm::vec3 other_body_angular_velocity, glm::vec3& out_force, glm::vec3& out_torque);
 		glm::vec3 calculate_contact_force(float this_particle_size, float other_particle_size, glm::vec3 offset_this_to_other, glm::vec3 this_velocity, glm::vec3 other_velocity);
+		void calculate_all_contact_force_and_torque(unsigned int this_body_index, unsigned int current_frame, glm::vec3& total_body_force, glm::vec3& total_body_torque);
+		void integrate_simulation(unsigned int previous_frame, float dt, unsigned int this_body_index, glm::vec3 total_body_force, glm::vec3 total_body_torque, glm::vec3& new_this_body_position, glm::vec3& new_this_body_velocity, glm::mat4& new_this_body_rotation, glm::vec3& new_this_body_angular_velocity);
 	};
 }

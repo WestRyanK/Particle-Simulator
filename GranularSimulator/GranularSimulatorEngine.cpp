@@ -50,7 +50,7 @@ void GranularSimulatorEngine::init_simulator(ShaderProgram* shader)
 	materials.push_back(material);
 	materials.push_back(material);
 	mlModel* ml_model = new mlModel();
-    LoadModel("Assets", "block.obj", *ml_model);
+    LoadModel("Assets", "sphere.obj", *ml_model);
 	Model3D* model = new Model3D(ml_model, materials);
 
 	GranularSubstance* substance = new GranularSubstance(

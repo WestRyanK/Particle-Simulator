@@ -357,3 +357,6 @@ MigrationBackup/
 
 # Do not ignore Assets folder (which contains .obj 3d models)
 !/GranularSimulator/Assets/**
+
+# Ignore simulation files
+/GranularSimulator/simulation.sim

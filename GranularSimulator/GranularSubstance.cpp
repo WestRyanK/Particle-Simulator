@@ -30,14 +30,14 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 		particle_mass,			//	particle_mass	(kg)
 		200.0f,					//	kd				(??)
 		100000.0f,				//	kr				(??)
-		1.0f/2.0f,				//	alpha			(#)
-		3.0f/2.0f,				//	beta			(#)
+		1.0f / 2.0f,				//	alpha			(#)
+		3.0f / 2.0f,				//	beta			(#)
 		0.3f);					//	mu				(#)
 
-	bool load_saved_simulation = false;
+	bool load_saved_simulation = true;
 	if (load_saved_simulation)
 	{
-		this->simulator = GranularSimulationLoader::load_simuation("simulation.sim");
+		this->simulator = GranularSimulationLoader::load_simuation("simulation2.sim");
 	}
 	else
 	{
@@ -45,9 +45,9 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 
 		this->simulator->init_simulation([&](GranularSubstanceSimulator* simulator)
 			{
-				float spacing_multiplier = 5.0f;
+				float spacing_multiplier = 4.0f;
 				float max_velocity = 0.5f;					// meter/second 
-				int columns = 10;
+				int columns = 5;
 				float spacing = this->particle_size * spacing_multiplier;
 				float offset_distance = (columns - 1) * spacing * 0.5f;
 				float start_height = 0.5f;
@@ -81,7 +81,12 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 						body_sizes,
 						glm::vec3(x, y, z), RandomGenerator::RandomVecBetween(-0.5f, 0.5f));
 				}
-				//simulator->init_body(body_offsets, body_sizes, glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(2.0f, 0.0f, 0.0f));
+
+
+
+				//std::vector<glm::vec3> body_offsets = BodyParticleGenerator::get_cube_grain_offsets(this->particle_size);
+				//std::vector<float> body_sizes = BodyParticleGenerator::get_cube_grain_sizes(this->particle_size);
+				//simulator->init_body(body_offsets, body_sizes, glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 			});
 
 		this->simulator->generate_simulation();
@@ -92,7 +97,7 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 
 void GranularSubstance::spawn_particles(ShaderProgram* shader)
 {
-	this->particle_count = this->simulator->get_body_count();
+	this->particle_count = this->simulator->get_particle_count();
 	this->set_instanced_count(this->particle_count);
 	this->finished_simulating = true;
 }
@@ -116,14 +121,15 @@ void GranularSubstance::update(float dt)
 		this->current_time = 0;
 	}
 
-	std::vector<glm::vec3> particle_positions = this->simulator->get_body_positions_at(this->current_frame);
-	//std::vector<float> particle_sizes = this->simulator->get_particle_sizes();
+	std::vector<glm::vec3> particle_positions = this->simulator->get_particle_positions_at(this->current_frame);
+	std::vector<float> particle_sizes = this->simulator->get_particle_sizes();
 	//glm::mat4* particle_rotations = this->simulator->get_particle_rotations_at(this->current_frame);
 	for (unsigned int i = 0; i < this->particle_count; i++)
 	{
 		glm::mat4 transform(1.0f);
 		transform = glm::translate(transform, particle_positions[i]);
-		transform = glm::scale(transform, glm::vec3(2.0f * this->particle_size));// particle_sizes[i]));
+		//transform = glm::scale(transform, glm::vec3(2.0f * this->particle_size));
+		transform = glm::scale(transform, glm::vec3(2.0f * particle_sizes[i]));
 		this->set_instanced_transform(i, transform);
 	}
 
