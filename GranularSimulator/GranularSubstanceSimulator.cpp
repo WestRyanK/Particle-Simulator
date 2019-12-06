@@ -267,6 +267,9 @@ void GranularSubstanceSimulator::evaluate(const State& input_state, float dt, co
 	{
 		output_state.body_positions[i] = input_state.body_positions[i] + input_derivative.body_positions[i] * dt;
 		output_state.body_velocities[i] = input_state.body_velocities[i] + input_derivative.body_velocities[i] * dt;
+
+		//output_state.body_rotations[i] = input_state.body_rotations[i] + input_derivative.body_positions[i] * dt;
+		//output_state.body_angular_velocities[i] = input_state.body_angular_velocities[i] + input_derivative.body_angular_velocities[i] * dt;
 	}
 	output_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
 
@@ -310,92 +313,11 @@ void GranularSubstanceSimulator::integrate_rk4(const State& input_state, float d
 	output_state.t = input_state.t + dt;
 }
 
-void GranularSubstanceSimulator::integrate_simulation(unsigned int previous_frame, float dt, unsigned int this_body_index, glm::vec3 total_body_force, glm::vec3 total_body_torque, glm::vec3& new_this_body_position, glm::vec3& new_this_body_velocity, glm::mat4& new_this_body_rotation, glm::vec3& new_this_body_angular_velocity)
-{
-	//const unsigned int EXPLICIT_EULER = 0;
-	//const unsigned int IMPLICIT_EULER = 1;
-	//const unsigned int AVG_EULER = 2;
-	//const unsigned int RUNGE_KUTTA = 3;
-
-	//unsigned int method = AVG_EULER;
-
-	//if (method == EXPLICIT_EULER)
-	//{
-	//	glm::vec3 previous_this_body_velocity = this->body_velocities[previous_frame][this_body_index];
-	//	new_this_body_position = this->body_positions[previous_frame][this_body_index] + previous_this_body_velocity * dt;   // p' = p + v * dt
-	//	new_this_body_velocity = previous_this_body_velocity + total_body_force / this->particle_mass * dt; // a = F/m       v' = v + a * dt
-
-	//	glm::vec3 previous_this_body_angular_velocity = this->body_angular_velocities[previous_frame][this_body_index];
-	//	new_this_body_rotation = this->body_rotations[previous_frame][this_body_index];
-
-	//	float new_this_body_angular_velocity_magnitude = glm::length(previous_this_body_angular_velocity) * dt;
-	//	if (new_this_body_angular_velocity_magnitude > 0.0f)
-	//	{
-	//		new_this_body_rotation = glm::rotate(new_this_body_rotation, new_this_body_angular_velocity_magnitude, new_this_body_angular_velocity);  // theta
-	//	}
-	//	new_this_body_angular_velocity = previous_this_body_angular_velocity + total_body_torque / this->particle_mass * dt; // a = T/I      // w' = w + a * dt
-	//}
-	//else if (method == IMPLICIT_EULER)
-	//{
-	//	glm::vec3 previous_this_body_velocity = this->body_velocities[previous_frame][this_body_index];
-	//	new_this_body_velocity = previous_this_body_velocity + total_body_force / this->particle_mass * dt; // a = F/m       v' = v + a * dt
-	//	new_this_body_position = this->body_positions[previous_frame][this_body_index] + new_this_body_velocity * dt;   // p' = p + v * dt
-
-	//	glm::vec3 previous_this_body_angular_velocity = this->body_angular_velocities[previous_frame][this_body_index];
-	//	new_this_body_angular_velocity = previous_this_body_angular_velocity + total_body_torque / this->particle_mass * dt; // a = T/I      // w' = w + a * dt
-	//	new_this_body_rotation = this->body_rotations[previous_frame][this_body_index];
-
-	//	float new_this_body_angular_velocity_magnitude = glm::length(new_this_body_angular_velocity) * dt;
-	//	if (new_this_body_angular_velocity_magnitude > 0.0f)
-	//	{
-	//		new_this_body_rotation = glm::rotate(new_this_body_rotation, new_this_body_angular_velocity_magnitude, new_this_body_angular_velocity);  // theta
-	//	}
-	//}
-	//else if (method == AVG_EULER)
-	//{
-	//	glm::vec3 previous_this_body_velocity = this->body_velocities[previous_frame][this_body_index];
-	//	new_this_body_velocity = previous_this_body_velocity + total_body_force / this->particle_mass * dt; // a = F/m       v' = v + a * dt
-	//	glm::vec3 avg_this_body_velocity = (previous_this_body_velocity + new_this_body_velocity) * 0.5f;
-	//	new_this_body_position = this->body_positions[previous_frame][this_body_index] + avg_this_body_velocity * dt;   // p' = p + v * dt
-
-	//	glm::vec3 previous_this_body_angular_velocity = this->body_angular_velocities[previous_frame][this_body_index];
-	//	new_this_body_angular_velocity = previous_this_body_angular_velocity + total_body_torque / this->particle_mass * dt; // a = T/I      // w' = w + a * dt
-	//	glm::vec3 avg_this_body_angular_velocity = (previous_this_body_angular_velocity + new_this_body_angular_velocity) * 0.5f;
-	//	new_this_body_rotation = this->body_rotations[previous_frame][this_body_index];
-
-	//	float new_this_body_angular_velocity_magnitude = glm::length(avg_this_body_angular_velocity) * dt;
-	//	if (new_this_body_angular_velocity_magnitude > 0.0f)
-	//	{
-	//		new_this_body_rotation = glm::rotate(new_this_body_rotation, new_this_body_angular_velocity_magnitude, avg_this_body_angular_velocity);  // theta
-	//	}
-	//}
-}
-
 void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, float dt)
 {
 	std::cout << "Simulating frame " << current_frame << " of " << this->frame_count << std::endl;
 
 	this->integrate_rk4(this->states[current_frame - 1], dt, this->states[current_frame]);
-	//for (unsigned int this_body_index = 0; this_body_index < this->body_count; this_body_index++)
-	//{
-	//	glm::vec3 total_body_force;
-	//	glm::vec3 total_body_torque;
-
-	//	this->calculate_all_contact_force_and_torque(this_body_index, this->body_positions[current_frame - 1], this->body_velocities[current_frame - 1], this->body_angular_velocities[current_frame - 1], this->particle_positions[current_frame - 1],  total_body_force, total_body_torque);
-
-	//	glm::vec3 new_this_body_position;
-	//	glm::vec3 new_this_body_velocity;
-	//	glm::mat4 new_this_body_rotation;
-	//	glm::vec3 new_this_body_angular_velocity;
-	//	this->integrate_simulation(current_frame - 1, dt, this_body_index, total_body_force, total_body_torque, new_this_body_position, new_this_body_velocity, new_this_body_rotation, new_this_body_angular_velocity);
-
-	//	this->body_positions[current_frame][this_body_index] = new_this_body_position;
-	//	this->body_velocities[current_frame][this_body_index] = new_this_body_velocity;
-	//	this->body_rotations[current_frame][this_body_index] = glm::mat4(1.0f);
-	//	//this->body_rotations[current_frame][this_body_index] = new_this_body_rotation;
-	//	//this->body_angular_velocities[current_frame][this_body_index] = new_this_body_angular_velocity;
-
-	//}
 
 	if (current_frame >= this->frame_count - 1)
 	{
