@@ -17,6 +17,17 @@ namespace CodeMonkeys::GranularSimulator
 	typedef std::set<int>::iterator body_particle_index_it;
 	typedef std::set<int> body_particle_index;
 
+	struct StateDerivative
+	{
+		std::vector<glm::vec3> body_positions_dt;
+		std::vector<glm::vec3> body_velocities_dt;
+
+		std::vector<glm::vec3> body_rotations_dt;
+		std::vector<glm::vec3> body_angular_velocities_dt;
+
+		StateDerivative(unsigned int body_count);
+	};
+
 	struct State
 	{
 		float t;
@@ -78,7 +89,9 @@ namespace CodeMonkeys::GranularSimulator
 		void calculate_all_body_accelerations(State state, float t, std::vector<glm::vec3>& body_accelerations, std::vector<glm::vec3>& body_angular_accelerations);
 		void calculate_all_contact_force_and_torque(unsigned int this_body_index, const State& state, glm::vec3& total_body_force, glm::vec3& total_body_torque);
 		void calculate_contact_force_and_torque(float this_particle_size, glm::vec3 this_particle_position, glm::vec3 this_particle_velocity, glm::vec3 this_body_angular_velocity, glm::vec3 this_body_position, float other_particle_size, glm::vec3 other_particle_position, glm::vec3 other_particle_velocity, glm::vec3 other_body_angular_velocity, glm::vec3& out_force, glm::vec3& out_torque);
-		void evaluate(const State& input_state, float dt, const State& input_derivative, State& output_derivative);
+		void evaluate(const State& input_state, float dt, const StateDerivative& input_derivative, StateDerivative& output_derivative);
 		void integrate_rk4(const State& input_state, float dt, State& output_state);
+
+		glm::mat4 rotate(glm::mat4 rotation_matrix, glm::vec3 rotation);
 	};
 }

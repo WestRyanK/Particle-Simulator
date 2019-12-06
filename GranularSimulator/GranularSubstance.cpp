@@ -41,7 +41,7 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 	}
 	else
 	{
-		this->particle_count = 1000;
+		this->particle_count = 1;
 
 		this->simulator->init_simulation([&](GranularSubstanceSimulator* simulator)
 			{
