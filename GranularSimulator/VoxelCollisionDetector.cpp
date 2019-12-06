@@ -15,15 +15,15 @@ glm::ivec3 VoxelCollisionDetector::get_voxel_key(glm::vec3 position) const
 void VoxelCollisionDetector::clear()
 {
     this->particle_indices_in_voxel.clear();
+	this->voxel_for_particle_index.clear();
 }
 
-void VoxelCollisionDetector::add_to_voxel_map(unsigned int index, glm::vec3 voxel_key)
+void VoxelCollisionDetector::add_to_voxel_map(unsigned int index, glm::ivec3 voxel_key)
 {
     this->particle_indices_in_voxel.insert(std::make_pair(voxel_key, index));
-
 }
 
-void VoxelCollisionDetector::remove_from_voxel_map(unsigned int index, glm::vec3 voxel_key)
+void VoxelCollisionDetector::remove_from_voxel_map(unsigned int index, glm::ivec3 voxel_key)
 {
 	std::pair<voxelmapiterator, voxelmapiterator> range = this->particle_indices_in_voxel.equal_range(voxel_key);
 	voxelmapiterator it = range.first;
@@ -41,6 +41,7 @@ void VoxelCollisionDetector::remove_from_voxel_map(unsigned int index, glm::vec3
 void VoxelCollisionDetector::insert(unsigned int index, glm::vec3 position)
 {
     glm::ivec3 voxel_key = this->get_voxel_key(position);
+
     for (int i = -1; i <= 1; i++)
     {
         for (int j = -1; j <= 1; j++)
@@ -52,29 +53,44 @@ void VoxelCollisionDetector::insert(unsigned int index, glm::vec3 position)
             }
         }
     }
+
+	this->voxel_for_particle_index.insert(std::make_pair(index, voxel_key));
 }
 
-void VoxelCollisionDetector::remove(unsigned int index, glm::vec3 position)
+void VoxelCollisionDetector::remove(unsigned int index)
 {
-    glm::ivec3 voxel_key = this->get_voxel_key(position);
-    for (int i = -1; i <= 1; i++)
-    {
-        for (int j = -1; j <= 1; j++)
-        {
-            for (int k = -1; k <= 1; k++)
-            {
-                glm::ivec3 offset_voxel_key(voxel_key.x + i, voxel_key.y + j, voxel_key.z + k);
-                this->remove_from_voxel_map(index, offset_voxel_key);
-            }
-        }
-    }
-}
-
-void VoxelCollisionDetector::update(unsigned int index, glm::vec3 old_position, glm::vec3 new_position)
-{
-	if (this->get_voxel_key(old_position) != this->get_voxel_key(new_position))
+	reversevoxelmapiterator voxel_key_it = this->voxel_for_particle_index.find(index);
+	if (voxel_key_it != this->voxel_for_particle_index.end())
 	{
-		this->remove(index, old_position);
+		glm::ivec3 voxel_key = voxel_key_it->second;
+		for (int i = -1; i <= 1; i++)
+		{
+			for (int j = -1; j <= 1; j++)
+			{
+				for (int k = -1; k <= 1; k++)
+				{
+					glm::ivec3 offset_voxel_key(voxel_key.x + i, voxel_key.y + j, voxel_key.z + k);
+					this->remove_from_voxel_map(index, offset_voxel_key);
+				}
+			}
+		}
+
+		this->voxel_for_particle_index.erase(index);
+	}
+}
+
+void VoxelCollisionDetector::update(unsigned int index, glm::vec3 new_position)
+{
+	reversevoxelmapiterator old_voxel_key_it = this->voxel_for_particle_index.find(index);
+
+	if (old_voxel_key_it == this->voxel_for_particle_index.end())
+	{
+		this->insert(index, new_position);
+	}
+	else
+	if (old_voxel_key_it->second != this->get_voxel_key(new_position))
+	{
+		this->remove(index);
 		this->insert(index, new_position);
 	}
 }

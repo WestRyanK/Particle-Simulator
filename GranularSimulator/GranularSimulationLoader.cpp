@@ -34,17 +34,20 @@ void GranularSimulationLoader::save_simulation(std::string filename, GranularSub
 
 	file << std::endl << std::endl << std::endl;
 
-	for (unsigned int frame_index = 0; frame_index < simulator->frame_count; frame_index++)
+	for (unsigned int state_index = 0; state_index < simulator->frame_count; state_index++)
 	{
+
+		file << simulator->states[state_index].t << std::endl;
+
 		for (unsigned int body_index = 0; body_index < simulator->body_count; body_index++)
 		{
-			glm::vec3 body_position = simulator->body_positions[frame_index][body_index];
+			glm::vec3 body_position = simulator->states[state_index].body_positions[body_index];
 			file << body_position.x << " " << body_position.y << " " << body_position.z << " ";
 		}
 		file << std::endl;
 		for (unsigned int particle_index = 0; particle_index < simulator->particle_count; particle_index++)
 		{
-			glm::vec3 particle_position = simulator->particle_positions[frame_index][particle_index];
+			glm::vec3 particle_position = simulator->states[state_index].particle_positions[particle_index];
 			file << particle_position.x << " " << particle_position.y << " " << particle_position.z << " ";
 		}
 		file << std::endl << std::endl;
@@ -65,7 +68,6 @@ GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string
 	float timestep_size;
 	unsigned int particle_count;
 	unsigned int body_count;
-	float particle_size;
 	float particle_mass;
 	float kd;
 	float kr;
@@ -95,23 +97,24 @@ GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string
 	}
 
 
-	simulator->body_positions = std::vector<std::vector<glm::vec3>>(frame_count, std::vector<glm::vec3>(body_count, glm::vec3()));
-	simulator->particle_positions = std::vector<std::vector<glm::vec3>>(frame_count, std::vector<glm::vec3>(particle_count, glm::vec3()));
+	simulator->states = std::vector<State>(frame_count, State(particle_count, body_count));
 
 	for (unsigned int frame_index = 0; frame_index < frame_count; frame_index++)
 	{
+		file >> simulator->states[frame_index].t;
+
 		for (unsigned int body_index = 0; body_index < body_count; body_index++)
 		{
-			file >> simulator->body_positions[frame_index][body_index].x;
-			file >> simulator->body_positions[frame_index][body_index].y;
-			file >> simulator->body_positions[frame_index][body_index].z;
+			file >> simulator->states[frame_index].body_positions[body_index].x;
+			file >> simulator->states[frame_index].body_positions[body_index].y;
+			file >> simulator->states[frame_index].body_positions[body_index].z;
 		}
 
 		for (unsigned int particle_index = 0; particle_index < particle_count; particle_index++)
 		{
-			file >> simulator->particle_positions[frame_index][particle_index].x;
-			file >> simulator->particle_positions[frame_index][particle_index].y;
-			file >> simulator->particle_positions[frame_index][particle_index].z;
+			file >> simulator->states[frame_index].particle_positions[particle_index].x;
+			file >> simulator->states[frame_index].particle_positions[particle_index].y;
+			file >> simulator->states[frame_index].particle_positions[particle_index].z;
 		}
 		std::cout << "Loaded frame " << frame_index << " of " << frame_count << " " << 100 * (frame_index / (float)frame_count) << "%" << std::endl;
 	}

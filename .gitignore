@@ -359,4 +359,4 @@ MigrationBackup/
 !/GranularSimulator/Assets/**
 
 # Ignore simulation files
-/GranularSimulator/simulation.sim
+/GranularSimulator/simulations/*

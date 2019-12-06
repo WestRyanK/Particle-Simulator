@@ -34,10 +34,10 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 		3.0f / 2.0f,				//	beta			(#)
 		0.3f);					//	mu				(#)
 
-	bool load_saved_simulation = true;
+	bool load_saved_simulation = false;
 	if (load_saved_simulation)
 	{
-		this->simulator = GranularSimulationLoader::load_simuation("simulation2.sim");
+		this->simulator = GranularSimulationLoader::load_simuation("simulations/simulation.sim");
 	}
 	else
 	{
@@ -47,7 +47,7 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 			{
 				float spacing_multiplier = 4.0f;
 				float max_velocity = 0.5f;					// meter/second 
-				int columns = 5;
+				int columns = 10;
 				float spacing = this->particle_size * spacing_multiplier;
 				float offset_distance = (columns - 1) * spacing * 0.5f;
 				float start_height = 0.5f;
@@ -121,19 +121,15 @@ void GranularSubstance::update(float dt)
 		this->current_time = 0;
 	}
 
-	std::vector<glm::vec3> particle_positions = this->simulator->get_particle_positions_at(this->current_frame);
+	State state = this->simulator->get_simulation_state_at(this->current_frame);
 	std::vector<float> particle_sizes = this->simulator->get_particle_sizes();
-	//glm::mat4* particle_rotations = this->simulator->get_particle_rotations_at(this->current_frame);
 	for (unsigned int i = 0; i < this->particle_count; i++)
 	{
 		glm::mat4 transform(1.0f);
-		transform = glm::translate(transform, particle_positions[i]);
-		//transform = glm::scale(transform, glm::vec3(2.0f * this->particle_size));
+		transform = glm::translate(transform, state.particle_positions[i]);
 		transform = glm::scale(transform, glm::vec3(2.0f * particle_sizes[i]));
 		this->set_instanced_transform(i, transform);
 	}
-
-	//delete particle_rotations;
 
 	this->current_time += dt;
 }
