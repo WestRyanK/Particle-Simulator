@@ -21,6 +21,93 @@ StateDerivative::StateDerivative(unsigned int body_count)
 	this->body_angular_velocities_dt = std::vector<glm::vec3>(body_count);
 }
 
+
+StateDerivative StateDerivative::operator * (const float& multiplier) const
+{
+	unsigned int size = this->body_positions_dt.size();
+	StateDerivative output(size);
+	for (unsigned int i = 0; i < size; i++)
+	{
+		output.body_positions_dt[i] = this->body_positions_dt[i] * multiplier;
+		output.body_velocities_dt[i] = this->body_velocities_dt[i] * multiplier;
+		output.body_angular_velocities_dt[i] = this->body_angular_velocities_dt[i] * multiplier;
+		output.body_rotations_dt[i] = this->body_rotations_dt[i] * multiplier;
+	}
+
+	return output;
+}
+
+StateDerivative StateDerivative::operator + (StateDerivative const& other) const
+{
+	if (this->body_positions_dt.size() != other.body_positions_dt.size())
+	{
+		throw "Both derivatives must have same number of bodies";
+	}
+
+	unsigned int size = this->body_positions_dt.size();
+	StateDerivative output(size);
+	for (unsigned int i = 0; i < size; i++)
+	{
+		output.body_positions_dt[i] = this->body_positions_dt[i] + other.body_positions_dt[i];
+		output.body_velocities_dt[i] = this->body_velocities_dt[i] + other.body_velocities_dt[i];
+		output.body_angular_velocities_dt[i] = this->body_angular_velocities_dt[i] + other.body_angular_velocities_dt[i];
+		output.body_rotations_dt[i] = this->body_rotations_dt[i] + other.body_rotations_dt[i];
+	}
+
+	return output;
+}
+
+StateDerivative StateDerivative::operator - (StateDerivative const& other) const
+{
+	if (this->body_positions_dt.size() != other.body_positions_dt.size())
+	{
+		throw "Both derivatives must have same number of bodies";
+	}
+
+	unsigned int size = this->body_positions_dt.size();
+	StateDerivative output(size);
+	for (unsigned int i = 0; i < size; i++)
+	{
+		output.body_positions_dt[i] = this->body_positions_dt[i] - other.body_positions_dt[i];
+		output.body_velocities_dt[i] = this->body_velocities_dt[i] - other.body_velocities_dt[i];
+		output.body_angular_velocities_dt[i] = this->body_angular_velocities_dt[i] - other.body_angular_velocities_dt[i];
+		output.body_rotations_dt[i] = this->body_rotations_dt[i] - other.body_rotations_dt[i];
+	}
+
+	return output;
+}
+
+glm::mat4 State::rotate(glm::mat4 rotation_matrix, glm::vec3 rotation) const
+{
+	float rotation_magnitude = glm::length(rotation);
+	if (rotation_magnitude > 0.0f)
+	{
+		rotation_matrix = glm::rotate(rotation_matrix, rotation_magnitude, rotation);
+	}
+
+	return rotation_matrix;
+}
+
+State State::operator + (StateDerivative const& other) const
+{
+	if (this->body_positions.size() != other.body_positions_dt.size())
+	{
+		throw "Both derivative and state must have same number of bodies";
+	}
+
+	unsigned int body_count = this->body_positions.size();
+	State output(this->particle_positions.size(), body_count);
+	for (unsigned int i = 0; i < body_count; i++)
+	{
+		output.body_positions[i] = this->body_positions[i] + other.body_positions_dt[i];
+		output.body_velocities[i] = this->body_velocities[i] + other.body_velocities_dt[i];
+		output.body_angular_velocities[i] = this->body_angular_velocities[i] + other.body_angular_velocities_dt[i];
+		output.body_rotations[i] = this->rotate(this->body_rotations[i], other.body_rotations_dt[i]);
+	}
+
+	return output;
+}
+
 State::State(unsigned int particle_count, unsigned int body_count)
 {
 	this->t = 0.0f;
@@ -271,16 +358,8 @@ void GranularSubstanceSimulator::calculate_all_body_accelerations(State state, f
 
 void GranularSubstanceSimulator::evaluate(const State& input_state, float dt, const StateDerivative& input_derivative, StateDerivative& output_derivative)
 {
-	State output_state(this->particle_count, this->body_count);
+	State output_state = input_state + (input_derivative * dt);
 	output_state.t = input_state.t + dt;
-	for (unsigned int i = 0; i < this->body_count; i++)
-	{
-		output_state.body_positions[i] = input_state.body_positions[i] + input_derivative.body_positions_dt[i] * dt;
-		output_state.body_velocities[i] = input_state.body_velocities[i] + input_derivative.body_velocities_dt[i] * dt;
-
-		output_state.body_angular_velocities[i] = input_state.body_angular_velocities[i] + input_derivative.body_angular_velocities_dt[i] * dt;
-		output_state.body_rotations[i] = this->rotate(input_state.body_rotations[i], input_derivative.body_rotations_dt[i] * dt);
-	}
 	output_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
 
 	output_derivative.body_positions_dt = output_state.body_velocities;
@@ -297,50 +376,52 @@ void GranularSubstanceSimulator::integrate_rk4(const State& input_state, float d
 	evaluate(input_state, dt * 0.5f, k2, k3);
 	evaluate(input_state, dt, k3, k4);
 
-	for (unsigned int this_body_index = 0; this_body_index < this->body_count; this_body_index++)
-	{
-		glm::vec3 body_positions_dt = 1.0f / 6.0f * (k1.body_positions_dt[this_body_index] + 2.0f * (k2.body_positions_dt[this_body_index] + k3.body_positions_dt[this_body_index]) + k4.body_positions_dt[this_body_index]);
-		glm::vec3 body_velocities_dt = 1.0f / 6.0f * (k1.body_velocities_dt[this_body_index] + 2.0f * (k2.body_velocities_dt[this_body_index] + k3.body_velocities_dt[this_body_index]) + k4.body_velocities_dt[this_body_index]);
-
-		glm::vec3 body_rotations_dt = 1.0f / 6.0f * (k1.body_rotations_dt[this_body_index] + 2.0f * (k2.body_rotations_dt[this_body_index] + k3.body_rotations_dt[this_body_index]) + k4.body_rotations_dt[this_body_index]);
-		glm::vec3 body_angular_velocities_dt = 1.0f / 6.0f * (k1.body_angular_velocities_dt[this_body_index] + 2.0f * (k2.body_angular_velocities_dt[this_body_index] + k3.body_angular_velocities_dt[this_body_index]) + k4.body_angular_velocities_dt[this_body_index]);
-
-		output_state.body_positions[this_body_index] = input_state.body_positions[this_body_index] + body_positions_dt * dt;
-		output_state.body_velocities[this_body_index] = input_state.body_velocities[this_body_index] + body_velocities_dt * dt;
-
-		output_state.body_rotations[this_body_index] = this->rotate(input_state.body_rotations[this_body_index], body_rotations_dt * dt);
-		output_state.body_angular_velocities[this_body_index] = input_state.body_angular_velocities[this_body_index] + body_angular_velocities_dt * dt;
-	}
-
+	output_state = input_state + ((k1 + (k2 + k3) * 2.0f + k4) * (1.0f / 6.0f)) * dt;
 	output_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
 
 	output_state.t = input_state.t + dt;
 }
 
+void GranularSubstanceSimulator::integrate_rkf45(const State& input_state, float dt, State& output_state)
+{
+	StateDerivative k1(this->body_count), k2(k1), k3(k1), k4(k1), k5(k1), k6(k1);
+
+	evaluate(input_state, 0.0f, StateDerivative(this->body_count), k1);
+	evaluate(input_state, (1.0f / 4.0f) * dt, k1 * (1.0f / 4.0f), k2);
+	evaluate(input_state, (3.0f / 8.0f) * dt, k1 * (3.0f / 32.0f) + k2 * (9.0f / 32.0f), k3);
+	evaluate(input_state, (12.0f / 13.0f) * dt, k1 * (1932.0f / 2197.0f) - k2 * (7200.0f / 2197.0f) + k3 * (7296.0f / 2197.0f), k4);
+	evaluate(input_state, (1.0f) * dt, k1 * (439.0f / 216.0f) - k2 * (8.0f) + k3 * (3680.0f / 513.0f) - k4 * (845.0f / 4104.0f), k5);
+	evaluate(input_state, (1.0f / 2.0f) * dt, k1 * (-8.0f / 27.0f) + k2 * (2.0f) - k3 * (3544.0f / 2565.0f) + k4 * (1859.0f / 4104.0f) - k5 * (11.0f / 40.0f), k6);
+
+	State order_4 = input_state + (k1 * (25.0f / 216.0f) + k3 * (1408.0f / 2565.0f) + k4 * (2197.0f / 4101.0f) - k5 * (1.0f / 5.0f));
+
+	State order_5 = input_state + (k1 * (16.0f / 135.0f) + k3 * (6656.0f / 12825.0f) + k4 * (28561.0f / 56430.0f) - k5 * (9.0f / 50.0f) + k6 * (2.0f / 55.0f));
+}
+
 void GranularSubstanceSimulator::integrate_euler(const State& input_state, float dt, State& output_state)
 {
-	output_state.t = input_state.t + dt;
+	//output_state.t = input_state.t + dt;
 
-	StateDerivative derivative = StateDerivative(this->body_count);
+	//StateDerivative derivative = StateDerivative(this->body_count);
 
-	this->calculate_all_body_accelerations(input_state, input_state.t + dt, derivative.body_velocities_dt, derivative.body_angular_velocities_dt);
+	//this->calculate_all_body_accelerations(input_state, input_state.t + dt, derivative.body_velocities_dt, derivative.body_angular_velocities_dt);
 
-	for (unsigned int i = 0; i < this->body_count; i++)
-	{
-		output_state.body_velocities[i] = input_state.body_velocities[i] + derivative.body_velocities_dt[i] * dt;
-		output_state.body_angular_velocities[i] = input_state.body_angular_velocities[i] + derivative.body_angular_velocities_dt[i] * dt;
-	}
+	//for (unsigned int i = 0; i < this->body_count; i++)
+	//{
+	//	output_state.body_velocities[i] = input_state.body_velocities[i] + derivative.body_velocities_dt[i] * dt;
+	//	output_state.body_angular_velocities[i] = input_state.body_angular_velocities[i] + derivative.body_angular_velocities_dt[i] * dt;
+	//}
 
-	derivative.body_positions_dt = output_state.body_velocities;
-	derivative.body_rotations_dt = output_state.body_angular_velocities;
+	//derivative.body_positions_dt = output_state.body_velocities;
+	//derivative.body_rotations_dt = output_state.body_angular_velocities;
 
-	for (unsigned int i = 0; i < this->body_count; i++)
-	{
-		output_state.body_positions[i] = input_state.body_positions[i] + derivative.body_positions_dt[i] * dt;
-		output_state.body_rotations[i] = this->rotate(input_state.body_rotations[i], derivative.body_rotations_dt[i] * dt);
-	}
+	//for (unsigned int i = 0; i < this->body_count; i++)
+	//{
+	//	output_state.body_positions[i] = input_state.body_positions[i] + derivative.body_positions_dt[i] * dt;
+	//	output_state.body_rotations[i] = this->rotate(input_state.body_rotations[i], derivative.body_rotations_dt[i] * dt);
+	//}
 
-	output_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
+	//output_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
 }
 
 void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, float dt)
@@ -349,6 +430,7 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 
 	//this->integrate_euler(this->states[current_frame - 1], dt, this->states[current_frame]);
 	this->integrate_rk4(this->states[current_frame - 1], dt, this->states[current_frame]);
+	this->integrate_rkf45(this->states[current_frame - 1], dt, this->states[current_frame]);
 
 	if (current_frame >= this->frame_count - 1)
 	{
@@ -357,16 +439,5 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, f
 	}
 
 	//std::swap(this->current_state_index, this->previous_state_index);
-}
-
-glm::mat4 GranularSubstanceSimulator::rotate(glm::mat4 rotation_matrix, glm::vec3 rotation)
-{
-	float rotation_magnitude = glm::length(rotation);
-	if (rotation_magnitude > 0.0f)
-	{
-		rotation_matrix = glm::rotate(rotation_matrix, rotation_magnitude, rotation);
-	}
-
-	return rotation_matrix;
 }
 
