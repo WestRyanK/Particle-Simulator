@@ -32,7 +32,7 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 		100000.0f,				//	kr				(??)
 		1.0f / 2.0f,				//	alpha			(#)
 		3.0f / 2.0f,				//	beta			(#)
-		0.3f);					//	mu				(#)
+		0.2f);					//	mu				(#)
 
 	bool load_saved_simulation = false;
 	if (load_saved_simulation)
@@ -41,7 +41,7 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 	}
 	else
 	{
-		this->particle_count = 1;
+		this->particle_count = 500;
 
 		this->simulator->init_simulation([&](GranularSubstanceSimulator* simulator)
 			{
@@ -86,7 +86,7 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 
 				//std::vector<glm::vec3> body_offsets = BodyParticleGenerator::get_cube_grain_offsets(this->particle_size);
 				//std::vector<float> body_sizes = BodyParticleGenerator::get_cube_grain_sizes(this->particle_size);
-				//simulator->init_body(body_offsets, body_sizes, glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+				//simulator->init_body(body_offsets, body_sizes, glm::vec3(0.0f, 0.08f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 			});
 
 		this->simulator->generate_simulation();

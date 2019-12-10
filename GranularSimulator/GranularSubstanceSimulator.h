@@ -91,6 +91,8 @@ namespace CodeMonkeys::GranularSimulator
 		void calculate_contact_force_and_torque(float this_particle_size, glm::vec3 this_particle_position, glm::vec3 this_particle_velocity, glm::vec3 this_body_angular_velocity, glm::vec3 this_body_position, float other_particle_size, glm::vec3 other_particle_position, glm::vec3 other_particle_velocity, glm::vec3 other_body_angular_velocity, glm::vec3& out_force, glm::vec3& out_torque);
 		void evaluate(const State& input_state, float dt, const StateDerivative& input_derivative, StateDerivative& output_derivative);
 		void integrate_rk4(const State& input_state, float dt, State& output_state);
+		void integrate_euler(const State& input_state, float dt, State& output_state);
+
 
 		glm::mat4 rotate(glm::mat4 rotation_matrix, glm::vec3 rotation);
 	};

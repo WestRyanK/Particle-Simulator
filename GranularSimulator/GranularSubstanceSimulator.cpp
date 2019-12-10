@@ -142,10 +142,11 @@ void GranularSubstanceSimulator::generate_simulation()
 void GranularSubstanceSimulator::calculate_contact_force_and_torque(float this_particle_size, glm::vec3 this_particle_position, glm::vec3 this_particle_velocity, glm::vec3 this_body_angular_velocity, glm::vec3 this_body_position, float other_particle_size, glm::vec3 other_particle_position, glm::vec3 other_particle_velocity, glm::vec3 other_body_angular_velocity, glm::vec3& out_force, glm::vec3& out_torque)
 {
 	glm::vec3 offset = other_particle_position - this_particle_position;
-	//glm::vec3 this_contact_offset = offset * (this_particle_size / (this_particle_size + other_particle_size));
-	//glm::vec3 other_contact_offset = offset - this_contact_offset;
-	glm::vec3 this_contact_offset = offset * 0.5f;
-	glm::vec3 other_contact_offset = this_contact_offset;
+	glm::vec3 offset_normal = glm::normalize(offset);
+	glm::vec3 this_contact_offset = offset - offset_normal * other_particle_size;
+	glm::vec3 other_contact_offset = offset - offset_normal * this_particle_size;
+	//glm::vec3 this_contact_offset = offset * 0.5f;
+	//glm::vec3 other_contact_offset = this_contact_offset;
 
 	glm::vec3 this_contact_velocity = this_particle_velocity + glm::cross(this_body_angular_velocity, this_contact_offset);
 	glm::vec3 other_contact_velocity = other_particle_velocity + glm::cross(other_body_angular_velocity, -other_contact_offset);
@@ -261,12 +262,10 @@ void GranularSubstanceSimulator::calculate_all_body_accelerations(State state, f
 		glm::vec3 total_body_torque;
 
 		this->calculate_all_contact_force_and_torque(this_body_index, state, total_body_force, total_body_torque);
-		if (glm::length(total_body_torque) > 0.0f)
-			std::cout << "AA";
 
 		float total_body_mass = this->particle_mass * this->body_particle_indices[this_body_index].size();
 		body_accelerations[this_body_index] = total_body_force / total_body_mass;
-		body_angular_accelerations[this_body_index] = total_body_torque / total_body_mass;
+		body_angular_accelerations[this_body_index] = total_body_torque / this->particle_mass;
 	}
 }
 
@@ -284,15 +283,9 @@ void GranularSubstanceSimulator::evaluate(const State& input_state, float dt, co
 	}
 	output_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
 
-
 	output_derivative.body_positions_dt = output_state.body_velocities;
 	output_derivative.body_rotations_dt = output_state.body_angular_velocities;
 	this->calculate_all_body_accelerations(output_state, input_state.t + dt, output_derivative.body_velocities_dt, output_derivative.body_angular_velocities_dt);
-
-	//for (unsigned int i = 0; i < this->body_count; i++)
-	//{
-	//	output_derivative.body_velocities_dt[i] *= 0.80f;
-	//}
 }
 
 void GranularSubstanceSimulator::integrate_rk4(const State& input_state, float dt, State& output_state)
@@ -324,10 +317,37 @@ void GranularSubstanceSimulator::integrate_rk4(const State& input_state, float d
 	output_state.t = input_state.t + dt;
 }
 
+void GranularSubstanceSimulator::integrate_euler(const State& input_state, float dt, State& output_state)
+{
+	output_state.t = input_state.t + dt;
+
+	StateDerivative derivative = StateDerivative(this->body_count);
+
+	this->calculate_all_body_accelerations(input_state, input_state.t + dt, derivative.body_velocities_dt, derivative.body_angular_velocities_dt);
+
+	for (unsigned int i = 0; i < this->body_count; i++)
+	{
+		output_state.body_velocities[i] = input_state.body_velocities[i] + derivative.body_velocities_dt[i] * dt;
+		output_state.body_angular_velocities[i] = input_state.body_angular_velocities[i] + derivative.body_angular_velocities_dt[i] * dt;
+	}
+
+	derivative.body_positions_dt = output_state.body_velocities;
+	derivative.body_rotations_dt = output_state.body_angular_velocities;
+
+	for (unsigned int i = 0; i < this->body_count; i++)
+	{
+		output_state.body_positions[i] = input_state.body_positions[i] + derivative.body_positions_dt[i] * dt;
+		output_state.body_rotations[i] = this->rotate(input_state.body_rotations[i], derivative.body_rotations_dt[i] * dt);
+	}
+
+	output_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
+}
+
 void GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, float dt)
 {
 	std::cout << "Simulating frame " << current_frame << " of " << this->frame_count << std::endl;
 
+	//this->integrate_euler(this->states[current_frame - 1], dt, this->states[current_frame]);
 	this->integrate_rk4(this->states[current_frame - 1], dt, this->states[current_frame]);
 
 	if (current_frame >= this->frame_count - 1)
