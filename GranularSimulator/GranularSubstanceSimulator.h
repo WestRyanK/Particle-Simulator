@@ -1,5 +1,7 @@
-#pragma once
+#ifndef _GRANULAR_SUBSTANCE_SIMULATOR_H_
+#define _GRANULAR_SUBSTANCE_SIMULATOR_H_
 
+#include "State.h"
 #include "VoxelCollisionDetector.h"
 #include <functional>
 #include <glm/glm.hpp>
@@ -10,47 +12,14 @@
 namespace CodeMonkeys::GranularSimulator
 {
 	class GranularSimulationLoader;
+	struct State;
+	struct StateDerivative;
 }
 
 namespace CodeMonkeys::GranularSimulator
 {
 	typedef std::set<int>::iterator body_particle_index_it;
 	typedef std::set<int> body_particle_index;
-
-	struct StateDerivative
-	{
-		std::vector<glm::vec3> body_positions_dt;
-		std::vector<glm::vec3> body_velocities_dt;
-
-		std::vector<glm::vec3> body_rotations_dt;
-		std::vector<glm::vec3> body_angular_velocities_dt;
-
-		StateDerivative(unsigned int body_count);
-		StateDerivative operator * (const float& multiplier) const;
-		StateDerivative operator + (const StateDerivative& other) const;
-		StateDerivative operator - (const StateDerivative& other) const;
-
-	};
-
-	struct State
-	{
-		float t;
-
-		std::vector<glm::vec3> particle_positions;
-		std::vector<glm::vec3> body_positions;
-		std::vector<glm::vec3> body_velocities;
-
-		std::vector<glm::mat4> body_rotations;
-		std::vector<glm::vec3> body_angular_velocities;
-
-		State(unsigned int particle_count, unsigned int body_count);
-		void update_particle_positions(const std::vector<std::set<int>>& body_particle_indices, const std::vector<std::vector<glm::vec3>>& body_offsets);
-
-		State operator + (const StateDerivative& other) const;
-
-	private:
-		glm::mat4 rotate(glm::mat4 rotation_matrix, glm::vec3 rotation) const;
-	};
 
 	class GranularSubstanceSimulator
 	{
@@ -62,7 +31,7 @@ namespace CodeMonkeys::GranularSimulator
 
 		void init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, glm::vec3 body_position, glm::vec3 body_velocity);
 		void init_simulation(std::function<void(GranularSubstanceSimulator*)> setup_simulation);
-		void generate_timestep(unsigned int timestep, float dt);
+		float generate_timestep(unsigned int timestep, float dt);
 
 		unsigned int get_body_count();
 		unsigned int get_particle_count();
@@ -72,6 +41,8 @@ namespace CodeMonkeys::GranularSimulator
 	private:
 		float particle_mass;							// kg
 		float timestep_size;							// seconds
+		float min_timestep_size = 0.000002f;
+		float max_timestep_size = 0.5f;
 		unsigned int frame_count;						// #   (total_time = frame_count * timestep_size)
 		unsigned int particle_count;					// #
 		float kd;
@@ -100,9 +71,11 @@ namespace CodeMonkeys::GranularSimulator
 		void calculate_contact_force_and_torque(float this_particle_size, glm::vec3 this_particle_position, glm::vec3 this_particle_velocity, glm::vec3 this_body_angular_velocity, glm::vec3 this_body_position, float other_particle_size, glm::vec3 other_particle_position, glm::vec3 other_particle_velocity, glm::vec3 other_body_angular_velocity, glm::vec3& out_force, glm::vec3& out_torque);
 		void evaluate(const State& input_state, float dt, const StateDerivative& input_derivative, StateDerivative& output_derivative);
 		void integrate_rk4(const State& input_state, float dt, State& output_state);
-		void integrate_rkf45(const State& input_state, float dt, State& output_state);
+		float integrate_rkf45(const State& input_state, float dt, State& output_state);
 		void integrate_euler(const State& input_state, float dt, State& output_state);
 
 
 	};
 }
+
+#endif

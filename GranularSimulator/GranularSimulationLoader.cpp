@@ -1,5 +1,6 @@
 #include "GranularSimulationLoader.h"
 
+#include "State.h"
 #include "GranularSubstanceSimulator.h"
 #include <fstream>
 #include <glm/glm.hpp>

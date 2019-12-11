@@ -55,7 +55,7 @@ void GranularSimulatorEngine::init_simulator(ShaderProgram* shader)
 
 	GranularSubstance* substance = new GranularSubstance(
 		model,
-		1000,			//	frame_count		(#)
+		500,			//	frame_count		(#)
 		0.002f,			//	timestep_size	(second) (50 frames/second)
 		0.04f,			//	particle_size	(meter) 
 		0.025f,		//	particle_mass	(kg)  (~1/10th of a penny)
