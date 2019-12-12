@@ -28,21 +28,16 @@ namespace CodeMonkeys::GranularSimulator
 	{
 	private:
 		GranularSubstanceSimulator* simulator;
-		unsigned int frame_count;
+		float simulation_duration;
 		float current_time;
 		unsigned int particle_count;
-		float particle_size;
-		float timestep_size;
 		float play_speed;
-
-		unsigned int current_frame;
-		bool finished_simulating;
 
 		void spawn_particles(ShaderProgram* shader);
 
 
 	public:
-		GranularSubstance(Model3D* model, unsigned int frame_count, float timestep_size, float particle_size, float particle_mass, ShaderProgram* shader);
+		GranularSubstance(Model3D* model, ShaderProgram* shader);
 		virtual void update(float dt);
 
 		// Inherited via IControllable

@@ -52,6 +52,15 @@ void State::update_particle_positions(const std::vector<std::set<int>>& body_par
 	}
 }
 
+State State::interpolate_between_states(const State& state_a, const State& state_b, float time_at_interpolation)
+{
+	float states_dt = state_b.t - state_a.t;
+	float fraction_of_state_a = (time_at_interpolation - state_a.t) / states_dt;
+	State interpolated_state = state_a + fraction_of_state_a * (state_b - state_a);
+	interpolated_state.t = time_at_interpolation;
+	return interpolated_state;
+}
+
 StateDerivative CodeMonkeys::GranularSimulator::operator * (const float& multiplier, const StateDerivative& derivative)
 {
 	return derivative * multiplier;
@@ -152,6 +161,7 @@ StateDerivative CodeMonkeys::GranularSimulator::operator - (const State& state, 
 		output.body_positions_dt[i] = state.body_positions[i] - other.body_positions[i];
 		output.body_velocities_dt[i] = state.body_velocities[i] - other.body_velocities[i];
 		output.body_angular_velocities_dt[i] = state.body_angular_velocities[i] - other.body_angular_velocities[i];
+		output.body_rotations_dt[i] = glm::vec3(0.0f);
 		//output.body_rotations_dt[i] = state.body_rotations[i] - other.body_rotations[i];
 	}
 

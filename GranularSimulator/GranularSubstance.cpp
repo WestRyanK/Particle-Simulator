@@ -14,25 +14,26 @@ using namespace CodeMonkeys::Engine::Assets;
 using namespace CodeMonkeys::Engine::Objects;
 
 
-GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, float timestep_size, float particle_size, float particle_mass, ShaderProgram* shader) :
+GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 	InstancedObject3D(model, "granular_substance_simulator", 0),
-	frame_count(frame_count),
-	particle_size(particle_size),
-	timestep_size(timestep_size),
 	play_speed(1.0f),
-	current_time(0.0f),
-	current_frame(0),
-	finished_simulating(false)
+	current_time(0.0f)
 {
+	float framerate = 50.0f;			// frame_rate		(frames / second)
+	float particle_size = 0.04f;		// particle_size	(meters)
+	this->simulation_duration = 10.0f;	// simulation_duration	(seconds)
+	float particle_count = 50;
+
 	this->simulator = new GranularSubstanceSimulator(
-		this->frame_count,		//	frame_count		(#)
-		this->timestep_size,	//	timestep_size	(second)
-		particle_mass,			//	particle_mass	(kg)
-		200.0f,					//	kd				(??)
-		100000.0f,				//	kr				(??)
-		1.0f / 2.0f,				//	alpha			(#)
-		3.0f / 2.0f,				//	beta			(#)
-		0.2f);					//	mu				(#)
+		this->simulation_duration,
+		framerate,
+		1.0f / (framerate * 10.0f),
+		0.025f,							//	particle_mass	(kg)
+		200.0f,							//	kd				(??)
+		100000.0f,						//	kr				(??)
+		1.0f / 2.0f,					//	alpha			(#)
+		3.0f / 2.0f,					//	beta			(#)
+		0.2f);							//	mu				(#)
 
 	bool load_saved_simulation = false;
 	if (load_saved_simulation)
@@ -41,19 +42,17 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 	}
 	else
 	{
-		this->particle_count = 50;
-
 		this->simulator->init_simulation([&](GranularSubstanceSimulator* simulator)
 			{
 				float spacing_multiplier = 4.0f;
 				float max_velocity = 0.5f;					// meter/second 
 				int columns = 10;
-				float spacing = this->particle_size * spacing_multiplier;
+				float spacing = particle_size * spacing_multiplier;
 				float offset_distance = (columns - 1) * spacing * 0.5f;
 				float start_height = 0.5f;
 
 
-				for (unsigned int body_index = 0; body_index < this->particle_count; ++body_index)
+				for (unsigned int body_index = 0; body_index < particle_count; ++body_index)
 				{
 					unsigned int ix = body_index % columns;
 					unsigned int iz = (body_index / columns) % columns;
@@ -67,13 +66,13 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 					std::vector<float> body_sizes;
 					if (RandomGenerator::RandomBetween(0.0f, 1.0f) < 0.3f)
 					{
-						body_offsets = BodyParticleGenerator::get_cube_grain_offsets(this->particle_size);
-						body_sizes = BodyParticleGenerator::get_cube_grain_sizes(this->particle_size);
+						body_offsets = BodyParticleGenerator::get_cube_grain_offsets(particle_size);
+						body_sizes = BodyParticleGenerator::get_cube_grain_sizes(particle_size);
 					}
 					else
 					{
-						body_offsets = BodyParticleGenerator::get_tetrahedron_grain_offsets(this->particle_size);
-						body_sizes = BodyParticleGenerator::get_tetrahedron_grain_sizes(this->particle_size);
+						body_offsets = BodyParticleGenerator::get_tetrahedron_grain_offsets(particle_size);
+						body_sizes = BodyParticleGenerator::get_tetrahedron_grain_sizes(particle_size);
 					}
 
 					simulator->init_body(
@@ -84,8 +83,8 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 
 
 
-				//std::vector<glm::vec3> body_offsets = BodyParticleGenerator::get_cube_grain_offsets(this->particle_size);
-				//std::vector<float> body_sizes = BodyParticleGenerator::get_cube_grain_sizes(this->particle_size);
+				//std::vector<glm::vec3> body_offsets = BodyParticleGenerator::get_cube_grain_offsets(particle_size);
+				//std::vector<float> body_sizes = BodyParticleGenerator::get_cube_grain_sizes(particle_size);
 				//simulator->init_body(body_offsets, body_sizes, glm::vec3(0.0f, 0.08f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 			});
 
@@ -97,33 +96,19 @@ GranularSubstance::GranularSubstance(Model3D* model, unsigned int frame_count, f
 
 void GranularSubstance::spawn_particles(ShaderProgram* shader)
 {
-	this->particle_count = this->simulator->get_particle_count();
-	this->set_instanced_count(this->particle_count);
-	this->finished_simulating = true;
+	this->set_instanced_count(this->simulator->get_particle_count());
 }
 
 void GranularSubstance::update(float dt)
 {
-	if (!this->finished_simulating)
+	if (this->current_time > this->simulation_duration)
 	{
-		this->current_frame++;
-		this->simulator->generate_timestep(this->current_frame, this->timestep_size);
-	}
-	else
-	{
-		this->current_frame = (unsigned int)(this->current_time * this->play_speed / this->timestep_size);
-	}
-
-	if (this->current_frame >= this->frame_count)
-	{
-		this->finished_simulating = true;
-		this->current_frame = 0;
 		this->current_time = 0;
 	}
 
-	State state = this->simulator->get_simulation_state_at(this->current_frame);
+	State state = this->simulator->get_simulation_state_at(this->current_time);
 	std::vector<float> particle_sizes = this->simulator->get_particle_sizes();
-	for (unsigned int i = 0; i < this->particle_count; i++)
+	for (unsigned int i = 0; i < state.particle_positions.size(); i++)
 	{
 		glm::mat4 transform(1.0f);
 		transform = glm::translate(transform, state.particle_positions[i]);
@@ -131,7 +116,7 @@ void GranularSubstance::update(float dt)
 		this->set_instanced_transform(i, transform);
 	}
 
-	this->current_time += dt;
+	this->current_time += dt * this->play_speed;
 }
 
 void GranularSubstance::control(std::string control_name, float value, float dt)
@@ -148,7 +133,6 @@ void GranularSubstance::control(std::string control_name, int value, float dt)
 {
 	if (control_name == "reset" && value == 1)
 	{
-		this->current_frame = 0;
 		this->current_time = 0;
 	}
 }

@@ -14,9 +14,13 @@ using CodeMonkeys::GranularSimulator::GranularSubstanceSimulator;
 using namespace CodeMonkeys::GranularSimulator;
 
 
-GranularSubstanceSimulator::GranularSubstanceSimulator(unsigned int frame_count, float timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu) :
-	frame_count(frame_count),
-	timestep_size(timestep_size),
+GranularSubstanceSimulator::GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu) :
+	simulation_duration(simulation_duration),
+	framerate(framerate),
+	initial_timestep_size(initial_timestep_size),
+	min_timestep_size(1.0f / (framerate * 10)),
+	max_timestep_size(1.0f / (framerate * 2)),
+	frame_count((unsigned int) glm::ceil(simulation_duration * framerate)),
 	particle_mass(particle_mass),
 	kd(kd),
 	kr(kr),
@@ -24,24 +28,26 @@ GranularSubstanceSimulator::GranularSubstanceSimulator(unsigned int frame_count,
 	beta(beta),
 	mu(mu),
 	Fg(particle_mass* glm::vec3(0.0f, -9.8f, 0.0f)),
-	initial_state(State(0, 0))
+	current_state(State(0,0)),
+	previous_state(State(0,0))
 {
 }
 
 void GranularSubstanceSimulator::init_simulation(std::function<void(GranularSubstanceSimulator*)> setup_simulation)
 {
-	this->initial_state = State(0, 0);
+	this->previous_state = State(0, 0);
 
 	this->is_setting_up_simulation = true;
 	setup_simulation(this);
 	this->is_setting_up_simulation = false;
 
 
-	this->body_count = (unsigned int)this->initial_state.body_positions.size();
-	this->particle_count = (unsigned int)this->initial_state.particle_positions.size();
-	this->states = std::vector<State>(this->frame_count, State(this->particle_count, this->body_count));
+	this->body_count = (unsigned int)this->previous_state.body_positions.size();
+	this->particle_count = (unsigned int)this->previous_state.particle_positions.size();
+	this->frame_states = std::vector<State>(this->frame_count, State(this->particle_count, this->body_count));
 
-	this->states[0] = this->initial_state;
+	this->previous_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
+	this->frame_states[0] = this->previous_state;
 
 	float max_particle_size = *std::max_element(this->particle_sizes.begin(), this->particle_sizes.end());
 
@@ -50,10 +56,6 @@ void GranularSubstanceSimulator::init_simulation(std::function<void(GranularSubs
 		delete this->collision_detector;
 	}
 	this->collision_detector = new VoxelCollisionDetector(max_particle_size * 2.0f);
-	//for (unsigned int i = 0; i < this->initial_particle_positions.size(); i++)
-	//{
-	//	this->collision_detector->insert(i, this->initial_particle_positions[i]);
-	//}
 }
 
 void GranularSubstanceSimulator::init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, glm::vec3 body_position, glm::vec3 body_velocity)
@@ -75,18 +77,33 @@ void GranularSubstanceSimulator::init_body(std::vector<glm::vec3> body_offsets, 
 
 		this->particle_sizes.push_back(body_particle_sizes[i]);
 
-		this->initial_state.particle_positions.push_back(body_offsets[i] + body_position);
+		this->previous_state.particle_positions.push_back(body_offsets[i] + body_position);
 	}
 
-	this->initial_state.body_positions.push_back(body_position);
-	this->initial_state.body_rotations.push_back(glm::mat4(1.0f));
-	this->initial_state.body_angular_velocities.push_back(glm::vec3(0.0f));
-	this->initial_state.body_velocities.push_back(body_velocity);
+	this->previous_state.body_positions.push_back(body_position);
+	this->previous_state.body_rotations.push_back(glm::mat4(1.0f));
+	this->previous_state.body_angular_velocities.push_back(glm::vec3(0.0f));
+	this->previous_state.body_velocities.push_back(body_velocity);
 }
 
-const State& GranularSubstanceSimulator::get_simulation_state_at(unsigned int t) const
+const State GranularSubstanceSimulator::get_simulation_state_at(float t) const
 {
-	return this->states[t];
+	unsigned int first_frame_index = this->get_frame_index_at_time(t);
+	if (first_frame_index < this->frame_count - 1)
+	{
+		State interpolated_state = State::interpolate_between_states(this->frame_states[first_frame_index], this->frame_states[first_frame_index + 1], t);
+		interpolated_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
+		return interpolated_state;
+	}
+	else
+	{
+		return this->frame_states[this->frame_count - 1];
+	}
+}
+
+unsigned int GranularSubstanceSimulator::get_frame_index_at_time(float t) const
+{
+	return t * this->framerate;
 }
 
 const std::vector<float>& GranularSubstanceSimulator::get_particle_sizes() const
@@ -102,15 +119,6 @@ unsigned int GranularSubstanceSimulator::get_body_count()
 unsigned int GranularSubstanceSimulator::get_particle_count()
 {
 	return this->particle_count;
-}
-
-void GranularSubstanceSimulator::generate_simulation()
-{
-	float dt = this->timestep_size;
-	for (unsigned int i = 1; i < this->frame_count; i++)
-	{
-		dt = this->generate_timestep(i, dt);
-	}
 }
 
 void GranularSubstanceSimulator::calculate_contact_force_and_torque(float this_particle_size, glm::vec3 this_particle_position, glm::vec3 this_particle_velocity, glm::vec3 this_body_angular_velocity, glm::vec3 this_body_position, float other_particle_size, glm::vec3 other_particle_position, glm::vec3 other_particle_velocity, glm::vec3 other_body_angular_velocity, glm::vec3& out_force, glm::vec3& out_torque)
@@ -272,22 +280,28 @@ void GranularSubstanceSimulator::integrate_rk4(const State& input_state, float d
 float GranularSubstanceSimulator::integrate_rkf45(const State& input_state, float dt, State& output_state)
 {
 	bool correct_timestep_size = false;
-	const float TOLERANCE = 0.001f;
+	const float TOLERANCE = 0.01f;
 	while (!correct_timestep_size)
 	{
 		std::cout << "dt: " << dt << std::endl;
 		StateDerivative k1(this->body_count), k2(k1), k3(k1), k4(k1), k5(k1), k6(k1);
 
-		evaluate(input_state, 0.0f, StateDerivative(this->body_count), k1);
-		evaluate(input_state, (1.0f / 4.0f) * dt, (k1 * (1.0f / 4.0f)) * dt, k2);
-		evaluate(input_state, (3.0f / 8.0f) * dt, (k1 * (3.0f / 32.0f) + k2 * (9.0f / 32.0f)) * dt, k3);
-		evaluate(input_state, (12.0f / 13.0f) * dt, (k1 * (1932.0f / 2197.0f) - k2 * (7200.0f / 2197.0f) + k3 * (7296.0f / 2197.0f)) * dt, k4);
-		evaluate(input_state, (1.0f) * dt, (k1 * (439.0f / 216.0f) - k2 * (8.0f) + k3 * (3680.0f / 513.0f) - k4 * (845.0f / 4104.0f)) * dt, k5);
-		evaluate(input_state, (1.0f / 2.0f) * dt, (k1 * (-8.0f / 27.0f) + k2 * (2.0f) - k3 * (3544.0f / 2565.0f) + k4 * (1859.0f / 4104.0f) - k5 * (11.0f / 40.0f)) * dt, k6);
+		evaluate(input_state, 0.f, StateDerivative(this->body_count), k1);
+		evaluate(input_state, (1.f / 4.f) * dt, ((1.f / 4.f) * k1), k2);
+		evaluate(input_state, (3.f / 8.f) * dt, ((3.f / 32.f) * k1 + (9.f / 32.f) * k2), k3);
+		evaluate(input_state, (12.f / 13.f) * dt, ((1932.f / 2197.f) * k1 - (7200.f / 2197.f) * k2 + (7296.f / 2197.f) * k3), k4);
+		evaluate(input_state, (1.f) * dt, ((439.f / 216.f) * k1 - (8.f) * k2 + (3680.f / 513.f) * k3 - (845.f / 4104.f) * k4), k5);
+		evaluate(input_state, (1.f / 2.f) * dt, ((-8.f / 27.f) * k1 + (2.f) * k2 - (3544.f / 2565.f) * k3 + (1859.f / 4104.f) * k4 - (11.f / 40.f) * k5), k6);
+		//k1 = k1 * dt;
+		//k2 = k2 * dt;
+		//k3 = k3 * dt;
+		//k4 = k4 * dt;
+		//k5 = k5 * dt;
+		//k6 = k6 * dt;
 
-		State yt = input_state + (k1 * (25.0f / 216.0f) + k3 * (1408.0f / 2565.0f) + k4 * (2197.0f / 4101.0f) - k5 * (1.0f / 5.0f)) * dt;
 
-		State zt = input_state + (k1 * (16.0f / 135.0f) + k3 * (6656.0f / 12825.0f) + k4 * (28561.0f / 56430.0f) - k5 * (9.0f / 50.0f) + k6 * (2.0f / 55.0f)) * dt;
+		State yt = input_state + dt * ((25.f / 216.f) * k1 + (1408.f / 2565.f) * k3 + (2197.f / 4101.f) * k4 - (1.f / 5.f) * k5);
+		State zt = input_state + dt * ((16.f / 135.f) * k1 + (6656.f / 12825.f) * k3 + (28561.f / 56430.f) * k4 - (9.f / 50.f) * k5 + (2.f / 55.f) * k6);
 
 		float max_dzy = 0.0f;
 		std::vector<glm::vec3> body_positions_dt = (zt - yt).body_positions_dt;
@@ -302,6 +316,21 @@ float GranularSubstanceSimulator::integrate_rkf45(const State& input_state, floa
 
 		float s = glm::pow(TOLERANCE * dt / (2.0f * glm::abs(max_dzy)), 0.25f);
 		std::cout << "S: " << s << std::endl;
+
+		//if (s < 1.0f && dt > this->min_timestep_size)
+		//{
+		//	dt = glm::max(dt * s, this->min_timestep_size);
+		//}
+		//else
+		//{
+		//	correct_timestep_size = true;
+		//	yt.update_particle_positions(this->body_particle_indices, this->body_offsets);
+		//	yt.t = input_state.t + dt;
+		//	output_state = yt;
+
+		//	dt = glm::min(dt * s, this->max_timestep_size);
+		//}
+
 		if (s < 0.75f && dt > this->min_timestep_size)
 		{
 			dt = glm::max(dt * 0.5f, this->min_timestep_size);
@@ -310,11 +339,10 @@ float GranularSubstanceSimulator::integrate_rkf45(const State& input_state, floa
 		{
 			correct_timestep_size = true;
 			yt.update_particle_positions(this->body_particle_indices, this->body_offsets);
+			yt.t = input_state.t + dt;
 			output_state = yt;
 		}
 
-
-		
 		if (s > 1.5f)
 		{
 			dt = glm::min(dt * 2.0f, this->max_timestep_size);
@@ -350,20 +378,41 @@ void GranularSubstanceSimulator::integrate_euler(const State& input_state, float
 	//output_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
 }
 
-float GranularSubstanceSimulator::generate_timestep(unsigned int current_frame, float dt)
+void GranularSubstanceSimulator::generate_simulation()
 {
-	std::cout << "Simulating frame  " << current_frame << " of " << this->frame_count << std::endl;
+	float dt = this->initial_timestep_size;
+	unsigned int frame_to_simulate = 1;
+	while (frame_to_simulate < this->frame_count)
+	{
+		 this->generate_timestep(frame_to_simulate, dt);
+	}
+}
+
+void GranularSubstanceSimulator::generate_timestep(unsigned int& next_timestep_to_generate, float& dt)
+{
+	float current_frame_time = next_timestep_to_generate / this->framerate;
+	std::cout << "Simulating frame  " << next_timestep_to_generate << " of " << this->frame_count << std::endl;
+	std::cout << "Current time: " << this->previous_state.t << std::endl;
 
 	//this->integrate_euler(this->states[current_frame - 1], dt, this->states[current_frame]);
 	//this->integrate_rk4(this->states[current_frame - 1], dt, this->states[current_frame]);
-	float next_timestep_size = this->integrate_rkf45(this->states[current_frame - 1], dt, this->states[current_frame]);
+	dt = this->integrate_rkf45(this->previous_state, dt, this->current_state);
 
-	if (current_frame >= this->frame_count - 1)
+	if (this->current_state.t > current_frame_time)
+	//if (this->previous_state.t <= current_frame_time && this->current_state.t > current_frame_time)
+	{
+		State frame_state = State::interpolate_between_states(this->previous_state, this->current_state, current_frame_time);
+		frame_state.update_particle_positions(this->body_particle_indices, this->body_offsets);
+		this->frame_states[next_timestep_to_generate] = frame_state;
+		next_timestep_to_generate++;
+	}
+
+	if (next_timestep_to_generate >= this->frame_count)
 	{
 		std::cout << "\a";
 		GranularSimulationLoader::save_simulation("simulations/simulation.sim", this);
 	}
 
-	return next_timestep_size;
+	this->previous_state = this->current_state;
 }
 

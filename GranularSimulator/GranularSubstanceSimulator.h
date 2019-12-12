@@ -24,14 +24,14 @@ namespace CodeMonkeys::GranularSimulator
 	class GranularSubstanceSimulator
 	{
 	public:
-		GranularSubstanceSimulator(unsigned int frame_count, float timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu);
+		GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu);
 		void generate_simulation();
 		const std::vector<float>& get_particle_sizes() const;
-		const State& get_simulation_state_at(unsigned int t) const;
+		const State get_simulation_state_at(float t) const;
 
 		void init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, glm::vec3 body_position, glm::vec3 body_velocity);
 		void init_simulation(std::function<void(GranularSubstanceSimulator*)> setup_simulation);
-		float generate_timestep(unsigned int timestep, float dt);
+		void generate_timestep(unsigned int& next_timestep_to_generate, float& dt);
 
 		unsigned int get_body_count();
 		unsigned int get_particle_count();
@@ -40,11 +40,13 @@ namespace CodeMonkeys::GranularSimulator
 
 	private:
 		float particle_mass;							// kg
-		float timestep_size;							// seconds
-		float min_timestep_size = 0.000002f;
-		float max_timestep_size = 0.5f;
+		float initial_timestep_size;					// seconds
+		float framerate;								// frames / second
+		float simulation_duration;						// seconds
+		float max_timestep_size;
+		float min_timestep_size;
 		unsigned int frame_count;						// #   (total_time = frame_count * timestep_size)
-		unsigned int particle_count;					// #
+		unsigned int particle_count = 0;				// #
 		float kd;
 		float kr;
 		float alpha;
@@ -52,10 +54,11 @@ namespace CodeMonkeys::GranularSimulator
 		float mu;										// ratio
 		glm::vec3 Fg;									// kg * meters / second
 
-		std::vector<State> states;
-		State initial_state;
+		std::vector<State> frame_states;
+		State previous_state;
+		State current_state;
 
-		unsigned int body_count;						// #
+		unsigned int body_count = 0;					// #
 		std::vector<std::vector<glm::vec3>> body_offsets;				// meters
 		std::vector<std::set<int>> body_particle_indices;
 		std::vector<int> particle_body_indices;
@@ -73,6 +76,8 @@ namespace CodeMonkeys::GranularSimulator
 		void integrate_rk4(const State& input_state, float dt, State& output_state);
 		float integrate_rkf45(const State& input_state, float dt, State& output_state);
 		void integrate_euler(const State& input_state, float dt, State& output_state);
+
+		unsigned int get_frame_index_at_time(float t) const;
 
 
 	};
