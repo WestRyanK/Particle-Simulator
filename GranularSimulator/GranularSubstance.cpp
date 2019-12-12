@@ -22,7 +22,6 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 	float framerate = 50.0f;			// frame_rate		(frames / second)
 	float particle_size = 0.04f;		// particle_size	(meters)
 	this->simulation_duration = 10.0f;	// simulation_duration	(seconds)
-	float particle_count = 50;
 
 	this->simulator = new GranularSubstanceSimulator(
 		this->simulation_duration,
@@ -44,9 +43,10 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 	{
 		this->simulator->init_simulation([&](GranularSubstanceSimulator* simulator)
 			{
+				float particle_count = 10;
 				float spacing_multiplier = 4.0f;
 				float max_velocity = 0.5f;					// meter/second 
-				int columns = 10;
+				int columns = 2;
 				float spacing = particle_size * spacing_multiplier;
 				float offset_distance = (columns - 1) * spacing * 0.5f;
 				float start_height = 0.5f;
@@ -66,13 +66,11 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 					std::vector<float> body_sizes;
 					if (RandomGenerator::RandomBetween(0.0f, 1.0f) < 0.3f)
 					{
-						body_offsets = BodyParticleGenerator::get_cube_grain_offsets(particle_size);
-						body_sizes = BodyParticleGenerator::get_cube_grain_sizes(particle_size);
+						BodyParticleGenerator::get_cube_grain(particle_size, body_offsets, body_sizes);
 					}
 					else
 					{
-						body_offsets = BodyParticleGenerator::get_tetrahedron_grain_offsets(particle_size);
-						body_sizes = BodyParticleGenerator::get_tetrahedron_grain_sizes(particle_size);
+						BodyParticleGenerator::get_tetrahedron_grain(particle_size, body_offsets, body_sizes);
 					}
 
 					simulator->init_body(
@@ -81,7 +79,11 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 						glm::vec3(x, y, z), RandomGenerator::RandomVecBetween(-0.5f, 0.5f));
 				}
 
+				simulator->init_plane(particle_size * .25f, glm::vec3(-1.f, -.2f, -1.f), glm::vec3(1.f, -.2f, -1.f), glm::vec3(-1.f, .5f, 1.f));
 
+				simulator->init_plane(.025f, glm::vec3(0.f, .3f, 0.f), glm::vec3(.1f, .3f, 0.f), glm::vec3(0.f, .6f, 0.f), true);
+				simulator->init_plane(.025f, glm::vec3(0.f, .3f, .1f), glm::vec3(.1f, .3f, .1f), glm::vec3(0.f, .9f, .3f), true);
+				simulator->init_plane(.025f, glm::vec3(.1f, .3f, .1f), glm::vec3(.1f, .3f, .3f), glm::vec3(.1f, .6f, .1f), true);
 
 				//std::vector<glm::vec3> body_offsets = BodyParticleGenerator::get_cube_grain_offsets(particle_size);
 				//std::vector<float> body_sizes = BodyParticleGenerator::get_cube_grain_sizes(particle_size);

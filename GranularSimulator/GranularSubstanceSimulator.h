@@ -29,7 +29,11 @@ namespace CodeMonkeys::GranularSimulator
 		const std::vector<float>& get_particle_sizes() const;
 		const State get_simulation_state_at(float t) const;
 
-		void init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, glm::vec3 body_position, glm::vec3 body_velocity);
+		void init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, glm::vec3 body_position, glm::vec3 body_velocity, bool is_body_movable = true);
+		void init_cube_grain(float particle_size, glm::vec3 grain_position, glm::vec3 grain_velocity);
+		void init_tetrahedron_grain(float particle_size, glm::vec3 grain_position, glm::vec3 grain_velocity);
+		void init_plane(float particle_size, glm::vec3 corner_a, glm::vec3 corner_b, glm::vec3 corner_c, bool is_movable = false);
+
 		void init_simulation(std::function<void(GranularSubstanceSimulator*)> setup_simulation);
 		void generate_timestep(unsigned int& next_timestep_to_generate, float& dt);
 
@@ -62,6 +66,7 @@ namespace CodeMonkeys::GranularSimulator
 		std::vector<std::vector<glm::vec3>> body_offsets;				// meters
 		std::vector<std::set<int>> body_particle_indices;
 		std::vector<int> particle_body_indices;
+		std::vector<bool> are_bodies_movable;
 		bool is_setting_up_simulation = false;
 		std::vector<float> particle_sizes;
 

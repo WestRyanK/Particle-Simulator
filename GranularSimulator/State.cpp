@@ -46,6 +46,7 @@ void State::update_particle_positions(const std::vector<std::set<int>>& body_par
 		unsigned int i = 0;
 		for (body_particle_index_it it = body_particle_indices[this_body_index].begin(); it != body_particle_indices[this_body_index].end(); it++)
 		{
+			//this->particle_positions[*it] = this->body_positions[this_body_index] + body_offsets[this_body_index][i];
 			this->particle_positions[*it] = this->body_positions[this_body_index] + glm::vec3(this->body_rotations[this_body_index] * glm::vec4(body_offsets[this_body_index][i], 0.0f));
 			i++;
 		}
