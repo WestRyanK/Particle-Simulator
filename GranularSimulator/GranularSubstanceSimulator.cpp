@@ -15,14 +15,14 @@ using CodeMonkeys::GranularSimulator::GranularSubstanceSimulator;
 using namespace CodeMonkeys::GranularSimulator;
 
 
-GranularSubstanceSimulator::GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_mass_to_size_ratio, float kd, float kr, float alpha, float beta, float mu) :
+GranularSubstanceSimulator::GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_density, float kd, float kr, float alpha, float beta, float mu) :
 	simulation_duration(simulation_duration),
 	framerate(framerate),
 	initial_timestep_size(initial_timestep_size),
 	min_timestep_size(1.f / (framerate * 10)),
 	max_timestep_size(1.f / (framerate * 2)),
 	frame_count((unsigned int)glm::ceil(simulation_duration* framerate)),
-	particle_mass_to_size_ratio(particle_mass_to_size_ratio),
+	particle_density(particle_density),
 	kd(kd),
 	kr(kr),
 	alpha(alpha),
@@ -65,7 +65,7 @@ void GranularSubstanceSimulator::init_cube_grain(float particle_size, glm::vec3 
 	glm::vec3 center_of_mass;
 	float total_body_mass;
 	glm::mat3 inertial_moment;
-	BodyParticleGenerator::get_cube_grain(particle_size, this->particle_mass_to_size_ratio, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
+	BodyParticleGenerator::get_cube_grain(particle_size, this->particle_density, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
 
 	this->init_body(particle_offsets, particle_sizes, total_body_mass, center_of_mass, inertial_moment, grain_velocity);
 }
@@ -77,7 +77,7 @@ void GranularSubstanceSimulator::init_tetrahedron_grain(float particle_size, glm
 	glm::vec3 center_of_mass;
 	float total_body_mass;
 	glm::mat3 inertial_moment;
-	BodyParticleGenerator::get_tetrahedron_grain(particle_size, this->particle_mass_to_size_ratio, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
+	BodyParticleGenerator::get_tetrahedron_grain(particle_size, this->particle_density, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
 
 	this->init_body(particle_offsets, particle_sizes, total_body_mass, center_of_mass, inertial_moment, grain_velocity);
 }
@@ -89,7 +89,7 @@ void GranularSubstanceSimulator::init_plane(float particle_size, glm::vec3 corne
 	glm::vec3 center_of_mass;
 	float total_body_mass;
 	glm::mat3 inertial_moment;
-	BodyParticleGenerator::get_plane(particle_size, this->particle_mass_to_size_ratio, corner_a, corner_b, corner_c, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
+	BodyParticleGenerator::get_plane(particle_size, this->particle_density, corner_a, corner_b, corner_c, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
 
 	this->init_body(particle_offsets, particle_sizes, total_body_mass, center_of_mass, inertial_moment, glm::vec3(0.f), is_movable);
 }
@@ -294,6 +294,8 @@ void GranularSubstanceSimulator::calculate_all_body_accelerations(State state, f
 			body_accelerations[this_body_index] = total_body_force / this->total_body_masses[this_body_index];
 			//body_angular_accelerations[this_body_index] = total_body_torque / this->total_body_masses[this_body_index];
 
+			// Rotate moment of inertia tensor
+			// https://ocw.mit.edu/courses/aeronautics-and-astronautics/16-07-dynamics-fall-2009/lecture-notes/MIT16_07F09_Lec26.pdf
 			glm::mat3 rotation = state.body_rotations[this_body_index];
 			body_angular_accelerations[this_body_index] = (rotation * this->body_inverse_inertial_moments[this_body_index] * glm::transpose(rotation)) * total_body_torque;
 

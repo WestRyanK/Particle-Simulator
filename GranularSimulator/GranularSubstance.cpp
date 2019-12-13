@@ -27,7 +27,7 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 		this->simulation_duration,
 		framerate,
 		1.0f / (framerate * 10.0f),
-		2.f,							//	particle_mass_to_size_ratio	(kg / meters)
+		1000.f,							//	particle_density	(kg / meter^3)
 		200.0f,							//	kd				(??)
 		100000.0f,						//	kr				(??)
 		1.0f / 2.0f,					//	alpha			(#)
@@ -83,7 +83,7 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 				//simulator->init_plane(particle_size * .25f, glm::vec3(-1.f, -.2f, -1.f), glm::vec3(1.f, -.2f, -1.f), glm::vec3(-1.f, .5f, 1.f));
 				//simulator->init_plane(particle_size * .5f, glm::vec3(-1.f, -.2f, -1.f), glm::vec3(1.f, -.2f, -1.f), glm::vec3(-1.f, -.2f, -1.3f));
 
-				//simulator->init_plane(.025f, glm::vec3(0.f, .3f, 0.f), glm::vec3(.1f, .3f, 0.f), glm::vec3(0.f, .6f, 0.f), true);
+				simulator->init_plane(.025f, glm::vec3(0.f, .3f, 0.f), glm::vec3(.1f, .3f, 0.f), glm::vec3(0.f, .6f, 0.f), true);
 				//simulator->init_plane(.025f, glm::vec3(0.f, .3f, .1f), glm::vec3(.1f, .3f, .1f), glm::vec3(0.f, .9f, .3f), true);
 				//simulator->init_plane(.025f, glm::vec3(.1f, .3f, .1f), glm::vec3(.1f, .3f, .3f), glm::vec3(.1f, .6f, .1f), true);
 

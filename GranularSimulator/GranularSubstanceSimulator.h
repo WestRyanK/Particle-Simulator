@@ -43,7 +43,7 @@ namespace CodeMonkeys::GranularSimulator
 		friend class GranularSimulationLoader;
 
 	private:
-		float particle_mass_to_size_ratio;						// kg / meter
+		float particle_density;						// kg / meter
 		float initial_timestep_size;							// seconds
 		float framerate;										// frames / second
 		float simulation_duration;								// seconds
