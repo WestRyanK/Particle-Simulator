@@ -116,7 +116,7 @@ TEST(VoxelCollisionDetectorTest, RemoveTest)
 	detector.insert(1, glm::vec3(20,10,0));
 	detector.insert(3, glm::vec3(-20,-20,0));
 
-	detector.remove(2, glm::vec3(20, -10, 0));
+	detector.remove(2);
 
 	std::unordered_set<unsigned int> indices;
 	// 0, 1

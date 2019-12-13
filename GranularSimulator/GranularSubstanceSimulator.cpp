@@ -5,6 +5,7 @@
 #include "RandomGenerator.h"
 #include "State.h"
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <unordered_set>
 
@@ -14,20 +15,19 @@ using CodeMonkeys::GranularSimulator::GranularSubstanceSimulator;
 using namespace CodeMonkeys::GranularSimulator;
 
 
-GranularSubstanceSimulator::GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu) :
+GranularSubstanceSimulator::GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_mass_to_size_ratio, float kd, float kr, float alpha, float beta, float mu) :
 	simulation_duration(simulation_duration),
 	framerate(framerate),
 	initial_timestep_size(initial_timestep_size),
 	min_timestep_size(1.f / (framerate * 10)),
 	max_timestep_size(1.f / (framerate * 2)),
 	frame_count((unsigned int)glm::ceil(simulation_duration* framerate)),
-	particle_mass(particle_mass),
+	particle_mass_to_size_ratio(particle_mass_to_size_ratio),
 	kd(kd),
 	kr(kr),
 	alpha(alpha),
 	beta(beta),
 	mu(mu),
-	Fg(particle_mass* glm::vec3(0.f, -9.8f, 0.f)),
 	current_state(State(0, 0)),
 	previous_state(State(0, 0))
 {
@@ -60,37 +60,41 @@ void GranularSubstanceSimulator::init_simulation(std::function<void(GranularSubs
 
 void GranularSubstanceSimulator::init_cube_grain(float particle_size, glm::vec3 grain_position, glm::vec3 grain_velocity)
 {
-	std::vector<glm::vec3> body_offsets;
-	std::vector<float> body_sizes;
-	BodyParticleGenerator::get_cube_grain(particle_size, body_offsets, body_sizes);
+	std::vector<glm::vec3> particle_offsets;
+	std::vector<float> particle_sizes;
+	glm::vec3 center_of_mass;
+	float total_body_mass;
+	glm::mat3 inertial_moment;
+	BodyParticleGenerator::get_cube_grain(particle_size, this->particle_mass_to_size_ratio, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
 
-	this->init_body(body_offsets, body_sizes, grain_position, grain_velocity);
+	this->init_body(particle_offsets, particle_sizes, total_body_mass, center_of_mass, inertial_moment, grain_velocity);
 }
 
 void GranularSubstanceSimulator::init_tetrahedron_grain(float particle_size, glm::vec3 grain_position, glm::vec3 grain_velocity)
 {
-	std::vector<glm::vec3> body_offsets;
-	std::vector<float> body_sizes;
-	BodyParticleGenerator::get_cube_grain(particle_size, body_offsets, body_sizes);
+	std::vector<glm::vec3> particle_offsets;
+	std::vector<float> particle_sizes;
+	glm::vec3 center_of_mass;
+	float total_body_mass;
+	glm::mat3 inertial_moment;
+	BodyParticleGenerator::get_tetrahedron_grain(particle_size, this->particle_mass_to_size_ratio, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
 
-	this->init_body(body_offsets, body_sizes, grain_position, grain_velocity);
+	this->init_body(particle_offsets, particle_sizes, total_body_mass, center_of_mass, inertial_moment, grain_velocity);
 }
 
 void GranularSubstanceSimulator::init_plane(float particle_size, glm::vec3 corner_a, glm::vec3 corner_b, glm::vec3 corner_c, bool is_movable)
 {
-	std::vector<glm::vec3> body_offsets;
-	std::vector<float> body_sizes;
-	BodyParticleGenerator::get_plane(particle_size, corner_a, corner_b, corner_c, body_offsets, body_sizes);
-	glm::vec3 body_center = (corner_b - corner_a) * 0.5f + (corner_c - corner_a) * 0.5f;
-	for (unsigned int i = 0; i < body_offsets.size(); i++)
-	{
-		body_offsets[i] -= body_center;
-	}
+	std::vector<glm::vec3> particle_offsets;
+	std::vector<float> particle_sizes;
+	glm::vec3 center_of_mass;
+	float total_body_mass;
+	glm::mat3 inertial_moment;
+	BodyParticleGenerator::get_plane(particle_size, this->particle_mass_to_size_ratio, corner_a, corner_b, corner_c, particle_offsets, particle_sizes, center_of_mass, total_body_mass, inertial_moment);
 
-	this->init_body(body_offsets, body_sizes, body_center, glm::vec3(0.f), is_movable);
+	this->init_body(particle_offsets, particle_sizes, total_body_mass, center_of_mass, inertial_moment, glm::vec3(0.f), is_movable);
 }
 
-void GranularSubstanceSimulator::init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, glm::vec3 body_position, glm::vec3 body_velocity, bool is_body_movable)
+void GranularSubstanceSimulator::init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, float total_body_mass, glm::vec3 body_position, glm::mat3 inertial_moment, glm::vec3 body_velocity, bool is_body_movable)
 {
 	if (!this->is_setting_up_simulation)
 	{
@@ -101,6 +105,9 @@ void GranularSubstanceSimulator::init_body(std::vector<glm::vec3> body_offsets, 
 	this->body_particle_indices.push_back(std::set<int>());
 
 	this->body_offsets.push_back(body_offsets);
+	//this->body_inverse_inertial_moments.push_back(inertial_moment);
+	this->body_inverse_inertial_moments.push_back(glm::inverse(inertial_moment));
+	this->total_body_masses.push_back(total_body_mass);
 	this->are_bodies_movable.push_back(is_body_movable);
 
 	for (unsigned int i = 0; i < body_offsets.size(); i++)
@@ -209,9 +216,6 @@ void GranularSubstanceSimulator::calculate_all_contact_force_and_torque(unsigned
 	total_body_force = glm::vec3(0.f);
 	total_body_torque = glm::vec3(0.f);
 
-	if (!this->are_bodies_movable[this_body_index])
-		return;
-
 	body_particle_index body_particles = this->body_particle_indices[this_body_index];
 	glm::vec3 this_body_position = state.body_positions[this_body_index];
 	glm::vec3 this_body_velocity = state.body_velocities[this_body_index];
@@ -242,7 +246,7 @@ void GranularSubstanceSimulator::calculate_all_contact_force_and_torque(unsigned
 			}
 		}
 
-		float wall_spacing = 1.f;
+		//float wall_spacing = 1.f;
 		//// ground contact force
 		//this->calculate_contact_force_and_torque(this_particle_size, this_particle_position, this_body_velocity, this_body_angular_velocity, this_body_position, this_particle_size, glm::vec3(this_particle_position.x, -this_particle_size, this_particle_position.z), glm::vec3(), glm::vec3(), contact_force, contact_torque);
 		//total_body_force += contact_force;
@@ -263,9 +267,11 @@ void GranularSubstanceSimulator::calculate_all_contact_force_and_torque(unsigned
 		//this->calculate_contact_force_and_torque(this_particle_size, this_particle_position, this_body_velocity, this_body_angular_velocity, this_body_position, this_particle_size, glm::vec3(this_particle_position.x, this_particle_position.y, -wall_spacing - this_particle_size), glm::vec3(), glm::vec3(), contact_force, contact_torque);
 		//total_body_force += contact_force;
 		//total_body_torque += contact_torque;
-
-		total_body_force += Fg;
+		
+		//total_body_force += Fg;
 	}
+	// gravity
+	total_body_force += this->total_body_masses[this_body_index] * gravity;
 }
 
 void GranularSubstanceSimulator::calculate_all_body_accelerations(State state, float t, std::vector<glm::vec3>& body_accelerations, std::vector<glm::vec3>& body_angular_accelerations)
@@ -275,16 +281,31 @@ void GranularSubstanceSimulator::calculate_all_body_accelerations(State state, f
 		this->collision_detector->update(i, state.particle_positions[i]);
 	}
 
+
 	for (unsigned int this_body_index = 0; this_body_index < this->body_count; this_body_index++)
 	{
-		glm::vec3 total_body_force;
-		glm::vec3 total_body_torque;
+		if (this->are_bodies_movable[this_body_index])
+		{
+			glm::vec3 total_body_force;
+			glm::vec3 total_body_torque;
 
-		this->calculate_all_contact_force_and_torque(this_body_index, state, total_body_force, total_body_torque);
+			this->calculate_all_contact_force_and_torque(this_body_index, state, total_body_force, total_body_torque);
 
-		float total_body_mass = this->particle_mass * this->body_particle_indices[this_body_index].size();
-		body_accelerations[this_body_index] = total_body_force / total_body_mass;
-		body_angular_accelerations[this_body_index] = total_body_torque / total_body_mass;
+			body_accelerations[this_body_index] = total_body_force / this->total_body_masses[this_body_index];
+			//body_angular_accelerations[this_body_index] = total_body_torque / this->total_body_masses[this_body_index];
+
+			glm::mat3 rotation = state.body_rotations[this_body_index];
+			body_angular_accelerations[this_body_index] = (rotation * this->body_inverse_inertial_moments[this_body_index] * glm::transpose(rotation)) * total_body_torque;
+
+			if (glm::length(total_body_torque) > 0.f)
+				std::cout << "A";
+			//body_angular_accelerations[this_body_index] = glm::vec3(state.body_rotations[this_body_index] * glm::vec4(this->body_inverse_inertial_moments[this_body_index] * glm::vec3((state.body_rotations[this_body_index] * glm::vec4(total_body_torque, 0.f))), 0.f));
+		}
+		else
+		{
+			body_accelerations[this_body_index] = glm::vec3(0.f);
+			body_angular_accelerations[this_body_index] = glm::vec3(0.f);
+		}
 	}
 }
 
@@ -314,6 +335,8 @@ void GranularSubstanceSimulator::integrate_rk4(const State& input_state, float d
 	output_state.t = input_state.t + dt;
 }
 
+// http://maths.cnam.fr/IMG/pdf/RungeKuttaFehlbergProof.pdf
+// https://ece.uwaterloo.ca/~dwharder/NumericalAnalysis/14IVPs/rkf45/complete.html
 float GranularSubstanceSimulator::integrate_rkf45(const State& input_state, float dt, State& output_state)
 {
 	bool correct_timestep_size = false;
@@ -364,21 +387,20 @@ float GranularSubstanceSimulator::integrate_rkf45(const State& input_state, floa
 		//	yt.update_particle_positions(this->body_particle_indices, this->body_offsets);
 		//	yt.t = input_state.t + dt;
 		//	output_state = yt;
-
 		//	dt = glm::min(dt * s, this->max_timestep_size);
 		//}
 
-		//if (s < 0.75f && dt > this->min_timestep_size)
-		//{
-		//	dt = glm::max(dt * 0.5f, this->min_timestep_size);
-		//}
-		//else
-		//{
+		if (s < 0.75f && dt > this->min_timestep_size)
+		{
+			dt = glm::max(dt * 0.5f, this->min_timestep_size);
+		}
+		else
+		{
 			correct_timestep_size = true;
 			yt.update_particle_positions(this->body_particle_indices, this->body_offsets);
 			yt.t = input_state.t + dt;
 			output_state = yt;
-		//}
+		}
 
 		//if (s > 1.5f)
 		//{
@@ -419,10 +441,15 @@ void GranularSubstanceSimulator::generate_simulation()
 {
 	float dt = this->initial_timestep_size;
 	unsigned int frame_to_simulate = 1;
+	auto start = std::chrono::high_resolution_clock::now();
 	while (frame_to_simulate < this->frame_count)
 	{
 		this->generate_timestep(frame_to_simulate, dt);
 	}
+	auto finish = std::chrono::high_resolution_clock::now();
+
+	auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start);
+	std::cout << std::endl << "Simulation took " << (milliseconds.count() / 1000.f) << "seconds\n";
 }
 
 void GranularSubstanceSimulator::generate_timestep(unsigned int& next_timestep_to_generate, float& dt)

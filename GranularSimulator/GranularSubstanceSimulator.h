@@ -29,7 +29,7 @@ namespace CodeMonkeys::GranularSimulator
 		const std::vector<float>& get_particle_sizes() const;
 		const State get_simulation_state_at(float t) const;
 
-		void init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, glm::vec3 body_position, glm::vec3 body_velocity, bool is_body_movable = true);
+		void init_body(std::vector<glm::vec3> body_offsets, std::vector<float> body_particle_sizes, float total_body_mass, glm::vec3 body_position, glm::mat3 inertial_moment, glm::vec3 body_velocity, bool is_body_movable = true);
 		void init_cube_grain(float particle_size, glm::vec3 grain_position, glm::vec3 grain_velocity);
 		void init_tetrahedron_grain(float particle_size, glm::vec3 grain_position, glm::vec3 grain_velocity);
 		void init_plane(float particle_size, glm::vec3 corner_a, glm::vec3 corner_b, glm::vec3 corner_c, bool is_movable = false);
@@ -43,30 +43,32 @@ namespace CodeMonkeys::GranularSimulator
 		friend class GranularSimulationLoader;
 
 	private:
-		float particle_mass;							// kg
-		float initial_timestep_size;					// seconds
-		float framerate;								// frames / second
-		float simulation_duration;						// seconds
+		float particle_mass_to_size_ratio;						// kg / meter
+		float initial_timestep_size;							// seconds
+		float framerate;										// frames / second
+		float simulation_duration;								// seconds
 		float max_timestep_size;
 		float min_timestep_size;
-		unsigned int frame_count;						// #   (total_time = frame_count * timestep_size)
-		unsigned int particle_count = 0;				// #
+		unsigned int frame_count;								// #   (total_time = frame_count * timestep_size)
+		unsigned int particle_count = 0;						// #
 		float kd;
 		float kr;
 		float alpha;
 		float beta;
-		float mu;										// ratio
-		glm::vec3 Fg;									// kg * meters / second
+		float mu;												// ratio
+		const glm::vec3 gravity = glm::vec3(0.f, -9.8f, 0.f);	// meters / second^2
 
 		std::vector<State> frame_states;
 		State previous_state;
 		State current_state;
 
-		unsigned int body_count = 0;					// #
+		unsigned int body_count = 0;									// #
 		std::vector<std::vector<glm::vec3>> body_offsets;				// meters
 		std::vector<std::set<int>> body_particle_indices;
 		std::vector<int> particle_body_indices;
 		std::vector<bool> are_bodies_movable;
+		std::vector<float> total_body_masses;
+		std::vector<glm::mat3> body_inverse_inertial_moments;
 		bool is_setting_up_simulation = false;
 		std::vector<float> particle_sizes;
 

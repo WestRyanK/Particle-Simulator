@@ -88,16 +88,16 @@ void GranularSimulatorEngine::init()
 
 	this->init_simulator(shader);
 
-	std::vector<Material*> materials;
-	Material* material = new ColorMaterial(shader, true, 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.2f, 0.2f, 0.8f));
-	materials.push_back(material);
-    mlModel* ml_model = new mlModel();
-    LoadModel("Assets", "block.obj", *ml_model);
-	Model3D* model = new Model3D(ml_model, materials);
-	Object3D* object = new Object3D(model, "object");
-	object->set_scale(glm::vec3(2.0f, 0.04f, 2.0f));
-	object->set_position(glm::vec3(0.0f, -0.02f, 0.0f));
-	this->world_root->add_child(object);
+	//std::vector<Material*> materials;
+	//Material* material = new ColorMaterial(shader, true, 5.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.2f, 0.2f, 0.8f));
+	//materials.push_back(material);
+ //   mlModel* ml_model = new mlModel();
+ //   LoadModel("Assets", "block.obj", *ml_model);
+	//Model3D* model = new Model3D(ml_model, materials);
+	//Object3D* object = new Object3D(model, "object");
+	//object->set_scale(glm::vec3(2.0f, 0.04f, 2.0f));
+	//object->set_position(glm::vec3(0.0f, -0.02f, 0.0f));
+	//this->world_root->add_child(object);
 
     auto keyboard_controller = new KeyboardController(this->camera, this->get_window());
     auto mouse_controller = new MouseController(this->camera, this->get_window());
