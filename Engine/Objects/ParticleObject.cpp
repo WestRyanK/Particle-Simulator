@@ -1,15 +1,15 @@
-#include "../Objects/Particle.h"
+#include "../Objects/ParticleObject.h"
 
 #include "../Assets/Model3D.h"
 #include "../Collision/BoundingMultiSphere.h"
 #include "../Objects/Billboard.h"
 #include "../Objects/ParticleEmitter.h"
 
-using CodeMonkeys::Engine::Objects::Particle;
+using CodeMonkeys::Engine::Objects::ParticleObject;
 using namespace CodeMonkeys::Engine::Objects;
 
 
-Particle::Particle(Model3D* model, Billboard* billboard, string name, float total_lifespan, ParticleEmitter* emitter) : PhysicalObject3D(model, name)
+ParticleObject::ParticleObject(Model3D* model, Billboard* billboard, string name, float total_lifespan, ParticleEmitter* emitter) : PhysicalObject3D(model, name)
 {
     this->total_lifespan = total_lifespan;
     this->current_lifespan = 0;
@@ -17,13 +17,13 @@ Particle::Particle(Model3D* model, Billboard* billboard, string name, float tota
     this->billboard = billboard;
 }
 
-Particle::~Particle()
+ParticleObject::~ParticleObject()
 {
     billboard = nullptr;
     emitter = nullptr;
 }
 
-Particle* Particle::clone()
+ParticleObject* ParticleObject::clone()
 {
     Model3D* model_clone = NULL;
     Billboard* billboard_clone = NULL;
@@ -32,7 +32,7 @@ Particle* Particle::clone()
     if (this->billboard != NULL)
         billboard_clone = this->billboard->clone();
 
-    Particle* particle_clone = new Particle(model_clone, billboard_clone, this->name, this->total_lifespan, this->emitter);
+    ParticleObject* particle_clone = new ParticleObject(model_clone, billboard_clone, this->name, this->total_lifespan, this->emitter);
     particle_clone->set_angular_velocity(this->get_angular_velocity());
     particle_clone->set_velocity(this->get_velocity());
     particle_clone->set_position(this->get_position());
@@ -48,7 +48,7 @@ Particle* Particle::clone()
     return particle_clone;
 }
 
-void Particle::update(float dt)
+void ParticleObject::update(float dt)
 {
     if (this->billboard != NULL)
     {
@@ -67,17 +67,17 @@ void Particle::update(float dt)
     }
 }
 
-void Particle::kill()
+void ParticleObject::kill()
 {
     emitter->kill_particle(this);
 }
 
-ParticleEmitter* Particle::get_emitter()
+ParticleEmitter* ParticleObject::get_emitter()
 {
     return this->emitter;
 }
 
-void Particle::draw(mat4 total_transform, ShaderProgram* shader)
+void ParticleObject::draw(mat4 total_transform, ShaderProgram* shader)
 {
     if (this->billboard != NULL)
     {
@@ -87,12 +87,12 @@ void Particle::draw(mat4 total_transform, ShaderProgram* shader)
     PhysicalObject3D::draw(total_transform, shader);
 }
 
-void Particle::set_collision_region(BoundingMultiSphere* collision_region)
+void ParticleObject::set_collision_region(BoundingMultiSphere* collision_region)
 {
     this->collision_region = collision_region;
 }
 
-ICollisionRegion* Particle::get_collision_region()
+ICollisionRegion* ParticleObject::get_collision_region()
 {
     return this->collision_region;
 }

@@ -56,7 +56,16 @@
     <ClCompile Include="GranularSimulationLoader.cpp">
       <Filter>Source Files\Simulator</Filter>
     </ClCompile>
-    <ClCompile Include="BodyParticleGenerator.cpp">
+    <ClCompile Include="State.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BodyGenerator.cpp">
+      <Filter>Source Files\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="Particle.cpp">
+      <Filter>Source Files\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="Body.cpp">
       <Filter>Source Files\Simulator</Filter>
     </ClCompile>
   </ItemGroup>
@@ -88,7 +97,14 @@
     <ClInclude Include="GranularSimulationLoader.h">
       <Filter>Source Files\Simulator</Filter>
     </ClInclude>
-    <ClInclude Include="BodyParticleGenerator.h">
+    <ClInclude Include="State.h" />
+    <ClInclude Include="Body.h">
+      <Filter>Source Files\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="BodyGenerator.h">
+      <Filter>Source Files\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
       <Filter>Source Files\Simulator</Filter>
     </ClInclude>
   </ItemGroup>

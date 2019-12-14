@@ -181,7 +181,7 @@
     <ClCompile Include="Objects\ILight3D.cpp" />
     <ClCompile Include="Objects\InstancedObject3D.cpp" />
     <ClCompile Include="Objects\Object3D.cpp" />
-    <ClCompile Include="Objects\Particle.cpp" />
+    <ClCompile Include="Objects\ParticleObject.cpp" />
     <ClCompile Include="Objects\ParticleEmitter.cpp" />
     <ClCompile Include="Objects\PhysicalObject3D.cpp" />
     <ClCompile Include="Objects\Skybox.cpp" />
@@ -231,7 +231,7 @@
     <ClInclude Include="Objects\ILight3D.h" />
     <ClInclude Include="Objects\InstancedObject3D.h" />
     <ClInclude Include="Objects\Object3D.h" />
-    <ClInclude Include="Objects\Particle.h" />
+    <ClInclude Include="Objects\ParticleObject.h" />
     <ClInclude Include="Objects\ParticleEmitter.h" />
     <ClInclude Include="Objects\PhysicalObject3D.h" />
     <ClInclude Include="Objects\Skybox.h" />

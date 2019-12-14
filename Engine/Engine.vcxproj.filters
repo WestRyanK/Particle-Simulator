@@ -110,9 +110,6 @@
     <ClCompile Include="Objects\Billboard.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Particle.cpp">
-      <Filter>Source Files\Objects</Filter>
-    </ClCompile>
     <ClCompile Include="Control\Controller.cpp">
       <Filter>Source Files\Control</Filter>
     </ClCompile>
@@ -171,6 +168,9 @@
       <Filter>Source Files\Engine</Filter>
     </ClCompile>
     <ClCompile Include="Objects\InstancedObject3D.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Objects\ParticleObject.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
   </ItemGroup>
@@ -289,9 +289,6 @@
     <ClInclude Include="Objects\Object3D.h">
       <Filter>Source Files\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Particle.h">
-      <Filter>Source Files\Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Objects\ParticleEmitter.h">
       <Filter>Source Files\Objects</Filter>
     </ClInclude>
@@ -317,6 +314,9 @@
       <Filter>Source Files\Dependencies\stb</Filter>
     </ClInclude>
     <ClInclude Include="Objects\InstancedObject3D.h">
+      <Filter>Source Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Objects\ParticleObject.h">
       <Filter>Source Files\Objects</Filter>
     </ClInclude>
   </ItemGroup>

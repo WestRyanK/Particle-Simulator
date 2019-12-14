@@ -11,7 +11,7 @@
 #include "../Engine/Objects/Camera3D.h"
 #include "../Engine/Objects/DirectionalLight.h"
 #include "../Engine/Objects/Object3D.h"
-#include "../Engine/Objects/Particle.h"
+#include "../Engine/Objects/ParticleObject.h"
 #include "../Engine/Objects/ParticleEmitter.h"
 #include "../Engine/UI/Text.h"
 #include "Control/KeyboardController.h"

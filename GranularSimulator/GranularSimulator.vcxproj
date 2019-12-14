@@ -92,27 +92,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Body.cpp" />
     <ClCompile Include="Control\KeyboardController.cpp" />
     <ClCompile Include="Control\MouseController.cpp" />
-    <ClCompile Include="BodyParticleGenerator.cpp" />
+    <ClCompile Include="BodyGenerator.cpp" />
     <ClCompile Include="GranularSimulationLoader.cpp" />
     <ClCompile Include="GranularSimulatorEngine.cpp" />
     <ClCompile Include="GranularSimulatorWindow.cpp" />
     <ClCompile Include="GranularSubstance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="GranularSubstanceSimulator.cpp" />
+    <ClCompile Include="Particle.cpp" />
     <ClCompile Include="RandomGenerator.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="VoxelCollisionDetector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Body.h" />
     <ClInclude Include="Control\KeyboardController.h" />
     <ClInclude Include="Control\MouseController.h" />
-    <ClInclude Include="BodyParticleGenerator.h" />
+    <ClInclude Include="BodyGenerator.h" />
     <ClInclude Include="GranularSimulatorEngine.h" />
     <ClInclude Include="GranularSimulatorWindow.h" />
     <ClInclude Include="GranularSubstanceSimulator.h" />
     <ClInclude Include="GranularSubstance.h" />
+    <ClInclude Include="Particle.h" />
     <ClInclude Include="RandomGenerator.h" />
     <ClInclude Include="GranularSimulationLoader.h" />
     <ClInclude Include="State.h" />

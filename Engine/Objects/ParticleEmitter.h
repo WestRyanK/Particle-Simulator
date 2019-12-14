@@ -7,7 +7,7 @@ namespace CodeMonkeys::Engine
 {
 	namespace Objects
 	{
-		class Particle;
+		class ParticleObject;
 	}
 }
 
@@ -19,17 +19,17 @@ namespace CodeMonkeys::Engine::Objects
     {
     private:
         bool is_emitting = false;
-        Particle* particle_prototype;
+        ParticleObject* particle_prototype;
     public:
         ParticleEmitter(string name);
         void start();
         void stop();
         void cancel();
-        void kill_particle(Particle* particle);
+        void kill_particle(ParticleObject* particle);
         void update(float dt);
         virtual void emit(float dt);
-        void emit(Particle* particle_to_emit);
-        void set_particle(Particle* particle_prototype);
+        void emit(ParticleObject* particle_to_emit);
+        void set_particle(ParticleObject* particle_prototype);
     };
 }
 

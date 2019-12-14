@@ -1,6 +1,6 @@
 #include "../Objects/ParticleEmitter.h"
 
-#include "../Objects/Particle.h"
+#include "../Objects/ParticleObject.h"
 
 using CodeMonkeys::Engine::Objects::ParticleEmitter;
 
@@ -26,12 +26,12 @@ void ParticleEmitter::cancel()
     this->stop();
     for (Object3D* object : this->children)
     {
-        Particle* particle = (Particle*)object;
+        ParticleObject* particle = (ParticleObject*)object;
         this->kill_particle(particle);
     }
 }
 
-void ParticleEmitter::kill_particle(Particle* particle)
+void ParticleEmitter::kill_particle(ParticleObject* particle)
 {
     this->remove_child(particle);
 }
@@ -46,16 +46,16 @@ void ParticleEmitter::update(float dt)
 
 void ParticleEmitter::emit(float dt)
 {
-    Particle* particle = this->particle_prototype->clone();
+    ParticleObject* particle = this->particle_prototype->clone();
     this->emit(particle);
 }
 
-void ParticleEmitter::emit(Particle* particle_to_emit)
+void ParticleEmitter::emit(ParticleObject* particle_to_emit)
 {
     this->add_child(particle_to_emit);
 }
 
-void ParticleEmitter::set_particle(Particle* particle_prototype)
+void ParticleEmitter::set_particle(ParticleObject* particle_prototype)
 {
     this->particle_prototype = particle_prototype;
 }

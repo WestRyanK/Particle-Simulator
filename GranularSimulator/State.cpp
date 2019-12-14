@@ -1,5 +1,7 @@
 #include "State.h"
 
+#include "Body.h"
+#include "Particle.h"
 #include <glm/glm.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
@@ -39,15 +41,16 @@ glm::mat4 State::rotate(glm::mat4 rotation_matrix, glm::vec3 rotation) const
 	return rotation_matrix;
 }
 
-void State::update_particle_positions(const std::vector<std::set<int>>& body_particle_indices, const std::vector<std::vector<glm::vec3>>& body_offsets)
+void State::update_particle_positions(const std::vector<Body>& bodies, const std::vector<Particle>& particles)
 {
 	for (unsigned int this_body_index = 0; this_body_index < this->body_positions.size(); this_body_index++)
 	{
 		unsigned int i = 0;
-		for (body_particle_index_it it = body_particle_indices[this_body_index].begin(); it != body_particle_indices[this_body_index].end(); it++)
+		for (body_particle_index_it it = bodies[this_body_index].particle_indices.begin(); it != bodies[this_body_index].particle_indices.end(); it++)
 		{
 			//this->particle_positions[*it] = this->body_positions[this_body_index] + body_offsets[this_body_index][i];
-			this->particle_positions[*it] = this->body_positions[this_body_index] + glm::vec3(this->body_rotations[this_body_index] * glm::vec4(body_offsets[this_body_index][i], 0.0f));
+			this->particle_positions[*it] = this->body_positions[this_body_index] + glm::vec3(this->body_rotations[this_body_index] * glm::vec4(particles[*it].offset_from_body, 0.0f));
+			//this->particle_positions[*it] = this->body_positions[this_body_index] + glm::vec3(this->body_rotations[this_body_index] * glm::vec4(bodies[this_body_index].particle_offsets[i], 0.0f));
 			i++;
 		}
 	}

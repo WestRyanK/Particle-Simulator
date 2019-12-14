@@ -30,7 +30,7 @@ void GranularSimulationLoader::save_simulation(std::string filename, GranularSub
 
 	//for (unsigned int particle_index = 0; particle_index < simulator->particle_count; particle_index++)
 	//{
-	//	file << simulator->particle_sizes[particle_index];
+	//	file << simulator->particle_radiuss[particle_index];
 	//}
 
 	//file << std::endl << std::endl << std::endl;
@@ -91,10 +91,10 @@ GranularSubstanceSimulator* GranularSimulationLoader::load_simuation(std::string
 	//
 	//simulator->particle_count = particle_count;
 	//simulator->body_count = body_count;
-	//simulator->particle_sizes = std::vector<float>(particle_count, 0);
+	//simulator->particle_radiuss = std::vector<float>(particle_count, 0);
 	//for (unsigned int particle_index = 0; particle_index < particle_count; particle_index++)
 	//{
-	//	file >> simulator->particle_sizes[particle_index];
+	//	file >> simulator->particle_radiuss[particle_index];
 	//}
 
 

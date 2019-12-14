@@ -7,6 +7,12 @@
 
 namespace CodeMonkeys::GranularSimulator
 {
+	struct Body;
+	struct Particle;
+}
+
+namespace CodeMonkeys::GranularSimulator
+{
 	typedef std::set<int>::iterator body_particle_index_it;
 	typedef std::set<int> body_particle_index;
 
@@ -22,7 +28,7 @@ namespace CodeMonkeys::GranularSimulator
 		std::vector<glm::vec3> body_angular_velocities;
 
 		State(unsigned int particle_count, unsigned int body_count);
-		void update_particle_positions(const std::vector<std::set<int>>& body_particle_indices, const std::vector<std::vector<glm::vec3>>& body_offsets);
+		void update_particle_positions(const std::vector<Body>& bodies, const std::vector<Particle>& particles);
 		glm::mat4 rotate(glm::mat4 rotation_matrix, glm::vec3 rotation) const;
 		static State interpolate_between_states(const State& state_a, const State& state_b, float time_at_interpolation);
 	};
