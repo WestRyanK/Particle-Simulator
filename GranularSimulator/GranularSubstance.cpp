@@ -24,8 +24,8 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 	float framerate = 50.0f;			// frame_rate		(frames / second)
 	float particle_radius = 0.04f;		// particle_radius	(meters)
 	//this->simulation_duration = 150.f / framerate;
-	this->simulation_duration = 15.0f;	// simulation_duration	(seconds)
-	float particle_density = 1000.f;	//	particle_density	(kg / meter^3)
+	this->simulation_duration = 7.0f;	// simulation_duration	(seconds)
+	float particle_density = 1600.f;	//	particle_density	(kg / meter^3)
 
 	this->simulator = new GranularSubstanceSimulator(
 		this->simulation_duration,
@@ -34,9 +34,9 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 		particle_density,				
 		150.0f,							//	kd				(??)
 		10000.0f,						//	kr				(??)
-		.5f ,					//	alpha			(#)
-		1.5f,					//	beta			(#)
-		0.0001f);							//	mu				(#)
+		.5f ,							//	alpha			(#)
+		1.5f,							//	beta			(#)
+		0.1f);							//	mu				(#)
 
 	bool load_saved_simulation = false;
 	if (load_saved_simulation)
@@ -47,13 +47,12 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 	{
 		this->simulator->init_simulation([&](GranularSubstanceSimulator* simulator)
 			{
-				float particle_count = 10;
-				float spacing_multiplier = 4.0f;
-				float max_velocity = 0.5f;					// meter/second 
+				float particle_count = 100;
+				float spacing_multiplier = 2.0f;
 				int columns = 5;
 				float spacing = particle_radius * spacing_multiplier;
 				float offset_distance = (columns - 1) * spacing * 0.5f;
-				float start_height = 0.5f;
+				float start_height = 0.02f;
 
 
 				for (unsigned int body_index = 0; body_index < particle_count; ++body_index)
@@ -102,7 +101,7 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 
 				//// Flat
 				particles.clear();
-				position = BodyGenerator::generate_plane(particle_radius * 1.5f, particle_density, glm::vec3(-1.f, -.2f, -1.f), glm::vec3(1.f, -.2f, -1.f), glm::vec3(-1.f, -.2f, 1.f), body, particles);
+				position = BodyGenerator::generate_plane(particle_radius * 1.f, particle_density, glm::vec3(-1.f, -.2f, -1.f), glm::vec3(1.f, -.2f, -1.f), glm::vec3(-1.f, -.2f, 1.f), body, particles);
 				body.is_movable = false;
 				simulator->add_body(body, particles, position);
 

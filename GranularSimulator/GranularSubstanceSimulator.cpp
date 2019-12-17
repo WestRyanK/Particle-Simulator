@@ -257,15 +257,12 @@ void GranularSubstanceSimulator::calculate_all_body_accelerations(State state, s
 			this->calculate_all_contact_force_and_torque(this_body_index, state, total_body_force, total_body_torque);
 
 			body_accelerations[this_body_index] = total_body_force / this->bodies[this_body_index].total_mass;
-			//body_angular_accelerations[this_body_index] = total_body_torque / this->bodies[this_body_index].total_mass;
 
 			// Rotate moment of inertia tensor
 			// https://ocw.mit.edu/courses/aeronautics-and-astronautics/16-07-dynamics-fall-2009/lecture-notes/MIT16_07F09_Lec26.pdf
-			glm::quat rotation = glm::normalize(state.body_orientations[this_body_index]);
+			glm::quat rotation = (state.body_orientations[this_body_index]);
 			glm::mat3 rotated_inverse_inertial_moment = (glm::toMat3(rotation) * this->bodies[this_body_index].inverse_inertial_moment) * glm::transpose(glm::toMat3(rotation));
 			body_angular_accelerations[this_body_index] = rotated_inverse_inertial_moment * total_body_torque;
-			//body_angular_accelerations[this_body_index] = total_body_torque / (this->bodies[this_body_index].total_mass * 0.005f);
-			//body_angular_accelerations[this_body_index] = glm::vec3(0.f);
 		}
 		else
 		{
@@ -302,7 +299,6 @@ void GranularSubstanceSimulator::integrate_rk4(const State& input_state, float d
 
 	output_state = input_state + ((1.f / 6.f) * (k1 + 2.f * (k2 + k3) + k4)) * dt;
 	output_state.update_particle_positions(this->bodies, this->particles);
-	std::cout << "Angular: " << output_state.body_angular_velocities[0].x << " " << output_state.body_angular_velocities[0].y << " " << output_state.body_angular_velocities[0].z << std::endl;
 
 	output_state.t = input_state.t + dt;
 }
@@ -409,7 +405,7 @@ void GranularSubstanceSimulator::integrate_euler(const State& input_state, float
 		output_state.body_velocities[i] = input_state.body_velocities[i] + derivative.body_velocities_dt[i] * dt;
 		output_state.body_positions[i] = input_state.body_positions[i] + output_state.body_velocities[i] * dt;
 		output_state.body_angular_velocities[i] = input_state.body_angular_velocities[i] + derivative.body_angular_velocities_dt[i] * dt;
-		output_state.body_orientations[i] = glm::normalize(input_state.rotate(input_state.body_orientations[i], output_state.body_angular_velocities[i] * dt));
+		output_state.body_orientations[i] = (input_state.rotate(input_state.body_orientations[i], output_state.body_angular_velocities[i] * dt));
 	}
 }
 
