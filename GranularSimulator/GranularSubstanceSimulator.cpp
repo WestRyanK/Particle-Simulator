@@ -150,8 +150,8 @@ glm::vec3 GranularSubstanceSimulator::calculate_contact_force(float this_particl
 
 		if (tangent_velocity_magnitude > 0.f)
 		{
-			//glm::vec3 shear_force = -glm::min(mu * normal_force_magnitude, this->kr * tangent_velocity_magnitude) * tangent_velocity / tangent_velocity_magnitude;
-			glm::vec3 shear_force = -mu * normal_force_magnitude * tangent_velocity / tangent_velocity_magnitude;
+			glm::vec3 shear_force = -glm::min(mu * normal_force_magnitude, this->kr * tangent_velocity_magnitude) * tangent_velocity / tangent_velocity_magnitude;
+			//glm::vec3 shear_force = -mu * normal_force_magnitude * tangent_velocity / tangent_velocity_magnitude;
 			contact_force += shear_force;
 		}
 
@@ -432,8 +432,8 @@ void GranularSubstanceSimulator::generate_timestep(unsigned int& next_timestep_t
 	std::cout << "Simulating frame  " << next_timestep_to_generate << " of " << this->frame_count << std::endl;
 	std::cout << "Current simulation time: " << this->previous_state.t << std::endl;
 
-	//this->integrate_euler(this->previous_state, dt, this->current_state);
-	this->integrate_rk4(this->previous_state, dt, this->current_state);
+	this->integrate_euler(this->previous_state, dt, this->current_state);
+	//this->integrate_rk4(this->previous_state, dt, this->current_state);
 	//dt = this->integrate_rkf45(this->previous_state, dt, this->current_state);
 
 	if (this->current_state.t > current_frame_time)

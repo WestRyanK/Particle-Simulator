@@ -25,18 +25,18 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 	float particle_radius = 0.04f;		// particle_radius	(meters)
 	//this->simulation_duration = 150.f / framerate;
 	this->simulation_duration = 7.0f;	// simulation_duration	(seconds)
-	float particle_density = 1600.f;	//	particle_density	(kg / meter^3)
+	float particle_density = 2000.f;	//	particle_density	(kg / meter^3)
 
 	this->simulator = new GranularSubstanceSimulator(
 		this->simulation_duration,
 		framerate,
-		1.0f / (framerate * 10.0f),
+		1.0f / (framerate * 5.0f),
 		particle_density,				
-		150.0f,							//	kd				(??)
+		200.0f,							//	kd				(??)
 		10000.0f,						//	kr				(??)
 		.5f ,							//	alpha			(#)
 		1.5f,							//	beta			(#)
-		0.1f);							//	mu				(#)
+		0.3f);							//	mu				(#)
 
 	bool load_saved_simulation = false;
 	if (load_saved_simulation)
@@ -48,7 +48,7 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 		this->simulator->init_simulation([&](GranularSubstanceSimulator* simulator)
 			{
 				float particle_count = 100;
-				float spacing_multiplier = 2.0f;
+				float spacing_multiplier = 3.0f;
 				int columns = 5;
 				float spacing = particle_radius * spacing_multiplier;
 				float offset_distance = (columns - 1) * spacing * 0.5f;
