@@ -10,9 +10,10 @@ namespace CodeMonkeys::GranularSimulator
 	struct Body
 	{
 		Body();
-		Body(float total_mass, glm::mat3 inverse_inertial_moment, bool is_movable = true);
+		Body(float total_mass, glm::mat3 inverse_inertial_moment, bool is_movable = true, bool is_visible = true);
 		std::set<int> particle_indices;
 		bool is_movable;
+		bool is_visible;
 		float total_mass;
 		glm::mat3 inverse_inertial_moment;
 	};

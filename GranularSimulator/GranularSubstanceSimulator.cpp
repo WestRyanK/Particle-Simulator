@@ -44,8 +44,7 @@ void GranularSubstanceSimulator::init_simulation(std::function<void(GranularSubs
 	this->is_setting_up_simulation = false;
 
 
-	this->particle_count = (unsigned int)this->previous_state.particle_positions.size();
-	this->frame_states = std::vector<State>(this->frame_count, State(this->particle_count, this->bodies.size()));
+	this->frame_states = std::vector<State>(this->frame_count, State(this->particles.size(), this->bodies.size()));
 
 	this->previous_state.update_particle_positions(this->bodies, this->particles);
 	this->frame_states[0] = this->previous_state;
@@ -115,6 +114,16 @@ unsigned int GranularSubstanceSimulator::get_frame_index_at_time(float t) const
 	return t * this->framerate;
 }
 
+const std::vector<Body>& GranularSubstanceSimulator::get_bodies() const
+{
+	return this->bodies;
+}
+
+float GranularSubstanceSimulator::get_simulation_duration() const
+{
+	return this->simulation_duration;
+}
+
 const std::vector<Particle>& GranularSubstanceSimulator::get_particles() const
 {
 	return this->particles;
@@ -127,7 +136,7 @@ unsigned int GranularSubstanceSimulator::get_body_count()
 
 unsigned int GranularSubstanceSimulator::get_particle_count()
 {
-	return this->particle_count;
+	return this->particles.size();
 }
 
 glm::vec3 GranularSubstanceSimulator::calculate_contact_force(float this_particle_radius, float other_particle_radius, glm::vec3 offset_this_to_other, glm::vec3 this_velocity, glm::vec3 other_velocity)
@@ -241,7 +250,7 @@ void GranularSubstanceSimulator::calculate_all_contact_force_and_torque(unsigned
 
 void GranularSubstanceSimulator::calculate_all_body_accelerations(State state, std::vector<glm::vec3>& body_accelerations, std::vector<glm::vec3>& body_angular_accelerations)
 {
-	for (unsigned int i = 0; i < this->particle_count; ++i)
+	for (unsigned int i = 0; i < this->particles.size(); ++i)
 	{
 		this->collision_detector->update(i, state.particle_positions[i]);
 	}
@@ -424,6 +433,8 @@ void GranularSubstanceSimulator::generate_simulation()
 	std::cout << std::endl << "Simulation took " << (milliseconds.count() / 1000.f) << "seconds" << std::endl;
 	std::cout << "At " << ((milliseconds.count() / this->frame_states.size()) / 1000.f) << " seconds per frame" << std::endl;
 	std::cout << "\a" << std::endl;
+
+	GranularSimulationLoader::save_simulation("simulations/simulation.sim", this);
 }
 
 void GranularSubstanceSimulator::generate_timestep(unsigned int& next_timestep_to_generate, float& dt)

@@ -28,7 +28,7 @@ namespace CodeMonkeys::GranularSimulator
 	class GranularSubstanceSimulator
 	{
 	public:
-		GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu);
+		GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_density, float kd, float kr, float alpha, float beta, float mu);
 
 		void add_body(
 			Body body, 
@@ -45,7 +45,9 @@ namespace CodeMonkeys::GranularSimulator
 
 		unsigned int get_body_count();
 		unsigned int get_particle_count();
+		float get_simulation_duration() const;
 		const std::vector<Particle>& get_particles() const;
+		const std::vector<Body>& get_bodies() const;
 		const State get_simulation_state_at(float t) const;
 
 		friend class GranularSimulationLoader;
@@ -58,7 +60,6 @@ namespace CodeMonkeys::GranularSimulator
 		float max_timestep_size;
 		float min_timestep_size;
 		unsigned int frame_count;								// #   (total_time = frame_count * timestep_size)
-		unsigned int particle_count = 0;						// #
 		float kd;
 		float kr;
 		float alpha;

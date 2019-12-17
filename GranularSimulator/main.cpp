@@ -12,8 +12,8 @@ using namespace CodeMonkeys::GranularSimulator;
 int main()
 {
 	RandomGenerator::Init();
-	int width = 640;
-	int height = 480;
+	int width = 1920;
+	int height = 1080;
 	GranularSimulatorWindow window = GranularSimulatorWindow(width, height, false);
 	GranularSimulatorEngine engine = GranularSimulatorEngine(window.get_window(), width, height);
 

@@ -13,7 +13,7 @@ Camera3D::Camera3D() : Object3D(NULL, "Camera")
     this->look_at = vec3(0.0f, 0.0f, 0.0f);
     this->position = vec3(0.0f, 0.0f, 60.0f);
     // TODO: Don't hardcode window size.
-    this->perspective_projection = glm::perspective(glm::radians(45.0f), 640.0f / 480.0f, 0.01f, 4600.0f);
+    this->perspective_projection = glm::perspective(glm::radians(45.0f), 1920.f / 1080.f, 0.01f, 4600.0f);
 }
 
 vec3 Camera3D::get_look_at()

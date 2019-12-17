@@ -33,8 +33,13 @@ namespace CodeMonkeys::GranularSimulator
 		unsigned int particle_count;
 		float play_speed;
 
-		void spawn_particles(ShaderProgram* shader);
+		void spawn_particles(GranularSubstanceSimulator* simulator, glm::vec3 min, glm::vec3 max, float particle_radius, float particle_density);
 
+		void plow_scene(float particle_radius, float particle_density);
+		void hourglass_scene(float particle_radius, float particle_density);
+		void ballsmash_scene(float particle_radius, float particle_density);
+		void test_scene(float particle_radius, float particle_density);
+		void spawn_floor(GranularSubstanceSimulator* simulator, float floor_size, float particle_radius, float particle_density);
 
 	public:
 		GranularSubstance(Model3D* model, ShaderProgram* shader);
