@@ -5,6 +5,8 @@
 #include "VoxelCollisionDetector.h"
 #include <functional>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <set>
 #include <string>
 #include <vector>
@@ -28,7 +30,14 @@ namespace CodeMonkeys::GranularSimulator
 	public:
 		GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu);
 
-		void add_body(Body body, std::vector<Particle> particles, glm::vec3 position, glm::vec3 velocity, glm::quat orientation = glm::quat(glm::vec3(0.f)), glm::vec3 angular_velocity = glm::vec3(0.f));
+		void add_body(
+			Body body, 
+			std::vector<Particle> particles,
+			glm::vec3 position,
+			glm::vec3 velocity = glm::vec3(0.f),
+			glm::quat orientation = glm::quat(0.f, glm::vec3(0.f, 1.f, 0.f)),
+			glm::vec3 angular_velocity = glm::vec3(0.f));
+
 		void init_simulation(std::function<void(GranularSubstanceSimulator*)> setup_simulation);
 
 		void generate_simulation();
@@ -69,12 +78,13 @@ namespace CodeMonkeys::GranularSimulator
 
 
 		glm::vec3 calculate_contact_force(float this_particle_radius, float other_particle_radius, glm::vec3 offset_this_to_other, glm::vec3 this_velocity, glm::vec3 other_velocity);
-		void calculate_all_body_accelerations(State state, float t, std::vector<glm::vec3>& body_accelerations, std::vector<glm::vec3>& body_angular_accelerations);
+		void calculate_all_body_accelerations(State state, std::vector<glm::vec3>& body_accelerations, std::vector<glm::vec3>& body_angular_accelerations);
 		void calculate_all_contact_force_and_torque(unsigned int this_body_index, const State& state, glm::vec3& total_body_force, glm::vec3& total_body_torque);
 		void evaluate(const State& input_state, float dt, const StateDerivative& input_derivative, StateDerivative& output_derivative);
 		void integrate_rk4(const State& input_state, float dt, State& output_state);
 		float integrate_rkf45(const State& input_state, float dt, State& output_state);
 		void integrate_euler(const State& input_state, float dt, State& output_state);
+		void integrate_verlet(const State& input_state, float dt, State& output_state);
 
 		unsigned int get_frame_index_at_time(float t) const;
 	};

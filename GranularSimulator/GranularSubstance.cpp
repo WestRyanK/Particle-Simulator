@@ -23,8 +23,8 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 {
 	float framerate = 50.0f;			// frame_rate		(frames / second)
 	float particle_radius = 0.04f;		// particle_radius	(meters)
-	//this->simulation_duration = 50.f / framerate;
-	this->simulation_duration = 10.0f;	// simulation_duration	(seconds)
+	//this->simulation_duration = 150.f / framerate;
+	this->simulation_duration = 15.0f;	// simulation_duration	(seconds)
 	float particle_density = 1000.f;	//	particle_density	(kg / meter^3)
 
 	this->simulator = new GranularSubstanceSimulator(
@@ -72,7 +72,7 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 					Body body;
 					std::vector<Particle> particles;
 					//if (true)
-					if (RandomGenerator::RandomBetween(0.0f, 1.0f) < 0.3f)
+					if (RandomGenerator::RandomBetween(0.0f, 1.0f) < 0.5f)
 					{
 						BodyGenerator::generate_cube_grain(particle_radius, particle_density, body, particles);
 					}
@@ -83,18 +83,17 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 					simulator->add_body(body, particles, position, velocity);
 				}
 
-				glm::vec3 position = glm::vec3(-.5f, 0.1f, 0.05f);
-				glm::vec3 velocity = glm::vec3(.0f, .0f, .0f);
+				//glm::vec3 position = glm::vec3(-.5f, 0.1f, 0.05f);
 				Body body;
 				std::vector<Particle> particles;
-				BodyGenerator::generate_plane(particle_radius, particle_density, glm::vec3(0.f,.1f,0.f), glm::vec3(2 * particle_radius, 0.1f, 0.f), glm::vec3(0.f, .1f, 4 * particle_radius), body, particles);
-				simulator->add_body(body, particles, position, velocity, glm::quat(glm::vec3(0.f)), glm::vec3(0.f, 2.f,0.f));
+				//BodyGenerator::generate_plane(particle_radius, particle_density, glm::vec3(0.f,.1f,0.f), glm::vec3(2 * particle_radius, 0.1f, 0.f), glm::vec3(0.f, .1f, 4 * particle_radius), body, particles);
+				//simulator->add_body(body, particles, position, glm::vec3(.5f,.0f,.0f), glm::quat(glm::radians(45.f), glm::vec3(0.f,1.f,0.f)), glm::vec3(0.f, 3.f,0.f));
 
-				particles.clear();
-				position = glm::vec3(.5f, 0.1f, 0.f);
-				velocity = glm::vec3(-2.5f, .0f, .0f);
-				BodyGenerator::generate_plane(particle_radius, particle_density, glm::vec3(0.f,.1f,0.f), glm::vec3(2 * particle_radius, 0.1f, 0.f), glm::vec3(0.f, .1f, 4 * particle_radius), body, particles);
-				simulator->add_body(body, particles, position, velocity);
+				//particles.clear();
+				//position = glm::vec3(.5f, 0.1f, 0.f);
+				//velocity = glm::vec3(-.5f, .0f, .0f);
+				//BodyGenerator::generate_plane(particle_radius, particle_density, glm::vec3(0.f,.1f,0.f), glm::vec3(2 * particle_radius, 0.1f, 0.f), glm::vec3(0.f, .1f, 4 * particle_radius), body, particles);
+				//simulator->add_body(body, particles, position, velocity, glm::quat(0.f, glm::vec3(0.f,1.f,0.f)), glm::vec3(0.f, 5.f, 0.f));
 
 				//position = glm::vec3(.5f, 0.1f, 0.f);
 				//velocity = glm::vec3(-.5f, .0f, .0f);
@@ -105,7 +104,7 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 				particles.clear();
 				position = BodyGenerator::generate_plane(particle_radius * 1.5f, particle_density, glm::vec3(-1.f, -.2f, -1.f), glm::vec3(1.f, -.2f, -1.f), glm::vec3(-1.f, -.2f, 1.f), body, particles);
 				body.is_movable = false;
-				simulator->add_body(body, particles, position, glm::vec3(0.f));
+				simulator->add_body(body, particles, position);
 
 			});
 

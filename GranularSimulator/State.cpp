@@ -14,10 +14,10 @@ using namespace CodeMonkeys::GranularSimulator;
 
 StateDerivative::StateDerivative(unsigned int body_count)
 {
-	this->body_positions_dt = std::vector<glm::vec3>(body_count);
-	this->body_velocities_dt = std::vector<glm::vec3>(body_count);
-	this->body_orientations_dt = std::vector<glm::vec3>(body_count);
-	this->body_angular_velocities_dt = std::vector<glm::vec3>(body_count);
+	this->body_positions_dt = std::vector<glm::vec3>(body_count, glm::vec3(0.f));
+	this->body_velocities_dt = std::vector<glm::vec3>(body_count, glm::vec3(0.f));
+	this->body_orientations_dt = std::vector<glm::vec3>(body_count, glm::vec3(0.f));
+	this->body_angular_velocities_dt = std::vector<glm::vec3>(body_count, glm::vec3(0.f));
 }
 
 State::State(unsigned int particle_count, unsigned int body_count)
@@ -25,10 +25,10 @@ State::State(unsigned int particle_count, unsigned int body_count)
 	this->t = 0.0f;
 	this->particle_positions = std::vector<glm::vec3>(particle_count);
 
-	this->body_positions = std::vector<glm::vec3>(body_count);
-	this->body_velocities = std::vector<glm::vec3>(body_count);
-	this->body_orientations = std::vector<glm::quat>(body_count, glm::toQuat(glm::mat3(1.f)));
-	this->body_angular_velocities = std::vector<glm::vec3>(body_count);
+	this->body_positions = std::vector<glm::vec3>(body_count, glm::vec3(0.f));
+	this->body_velocities = std::vector<glm::vec3>(body_count, glm::vec3(0.f));
+	this->body_orientations = std::vector<glm::quat>(body_count, glm::quat(0.f, glm::vec3(0.f, 1.f, 0.f)));
+	this->body_angular_velocities = std::vector<glm::vec3>(body_count, glm::vec3(0.f));
 }
 
 glm::quat State::rotate(glm::quat orientation_quat, glm::vec3 rotation) const
@@ -49,7 +49,7 @@ void State::update_particle_positions(const std::vector<Body>& bodies, const std
 		unsigned int i = 0;
 		for (body_particle_index_it it = bodies[this_body_index].particle_indices.begin(); it != bodies[this_body_index].particle_indices.end(); it++)
 		{
-			this->particle_positions[*it] = this->body_positions[this_body_index] + this->body_orientations[this_body_index] * particles[*it].offset_from_body;
+			this->particle_positions[*it] = this->body_positions[this_body_index] + glm::normalize(this->body_orientations[this_body_index]) * particles[*it].offset_from_body;
 			i++;
 		}
 	}
@@ -149,8 +149,13 @@ State CodeMonkeys::GranularSimulator::operator + (const State& state, const Stat
 		output.body_positions[i] = state.body_positions[i] + other.body_positions_dt[i];
 		output.body_velocities[i] = state.body_velocities[i] + other.body_velocities_dt[i];
 		output.body_angular_velocities[i] = state.body_angular_velocities[i] + other.body_angular_velocities_dt[i];
-		output.body_orientations[i] = state.rotate(state.body_orientations[i], other.body_orientations_dt[i]);
+		output.body_orientations[i] = glm::normalize(state.rotate(state.body_orientations[i], other.body_orientations_dt[i]));
 	}
+	glm::quat norm = glm::normalize(output.body_orientations[0]);
+	float len = glm::length(output.body_orientations[0]);
+	float len2 = glm::length(norm);
+	glm::vec3 euler = glm::eulerAngles(output.body_orientations[0]);
+	glm::vec3 euler2 = glm::eulerAngles(norm);
 
 	return output;
 }
