@@ -25,6 +25,7 @@ namespace CodeMonkeys::GranularSimulator
 	typedef std::set<int>::iterator body_particle_index_it;
 	typedef std::set<int> body_particle_index;
 
+	// http://wnbell.com/media/2005-07-SCA-Granular/BeYiMu2005.pdf
 	class GranularSubstanceSimulator
 	{
 	public:

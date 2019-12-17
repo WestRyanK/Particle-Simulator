@@ -18,7 +18,7 @@ using namespace CodeMonkeys::Engine::Assets;
 using namespace CodeMonkeys::Engine::Objects;
 
 
-GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
+GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader, bool load_simulation, std::string filepath) :
 	InstancedObject3D(model, "granular_substance_simulator", 0),
 	play_speed(1.0f),
 	current_time(0.0f)
@@ -26,7 +26,7 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 	float framerate = 50.0f;			// frame_rate		(frames / second)
 	float particle_radius = 0.04f;		// particle_radius	(meters)
 	//this->simulation_duration = 150.f / framerate;
-	this->simulation_duration = 2.0f;	// simulation_duration	(seconds)
+	this->simulation_duration = 5.0f;	// simulation_duration	(seconds)
 	float particle_density = 2000.f;	//	particle_density	(kg / meter^3)
 
 	this->simulator = new GranularSubstanceSimulator(
@@ -38,19 +38,19 @@ GranularSubstance::GranularSubstance(Model3D* model, ShaderProgram* shader) :
 		10000.0f,						//	kr				(??)
 		.5f,							//	alpha			(#)
 		1.5f,							//	beta			(#)
-		0.3f);							//	mu				(#)
+		0.05f);							//	mu				(#)
 
-	bool load_saved_simulation = true;
-	if (load_saved_simulation)
+	if (load_simulation)
 	{
-		this->simulator = GranularSimulationLoader::load_simuation("simulations/simulation.sim");
+		this->simulator = GranularSimulationLoader::load_simuation(filepath);
 		this->simulation_duration = simulator->get_simulation_duration();
 	}
 	else
 	{
-		//this->plow_scene(particle_radius, particle_density);
+		this->plow_scene(particle_radius, particle_density);
 		//this->hourglass_scene(particle_radius, particle_density);
-		this->ballsmash_scene(particle_radius, particle_density);
+		//this->ballsmash_scene(particle_radius, particle_density);
+		//this->avalanche_scene(particle_radius, particle_density);
 		//this->test_scene(particle_radius, particle_density);
 
 		this->simulator->generate_simulation();
@@ -72,6 +72,25 @@ void GranularSubstance::plow_scene(float particle_radius, float particle_density
 			BodyGenerator::generate_plane(particle_radius, particle_density, glm::vec3(-.2f, particle_radius, -.2f), glm::vec3(.2f, particle_radius, -.2f), glm::vec3(-.2f, particle_radius * 8, -.2f), body, particles);
 			body.is_movable = false;
 			simulator->add_body(body, particles, glm::vec3(0.f, particle_radius * 2, -2.f), glm::vec3(0.f, 0.f, 1.f));
+		});
+}
+
+// 161.4 seconds
+// 0.645 seconds per frame
+void GranularSubstance::avalanche_scene(float particle_radius, float particle_density)
+{
+	this->simulator->init_simulation([&](GranularSubstanceSimulator* simulator)
+		{
+			this->spawn_particles(simulator, glm::vec3(-1.3f, 1.2f, -1.f), glm::vec3(-.8f, 1.8f, 1.f), particle_radius, particle_density);
+
+			this->spawn_floor(simulator, 2.f, 0.5f * particle_radius, particle_density);
+
+			Body body;
+			std::vector<Particle> particles;
+			glm::vec3 position = BodyGenerator::generate_plane(0.5f * particle_radius, particle_density, glm::vec3(6.f, .5f, 1.f), glm::vec3(6.f, .5f, -1.f), glm::vec3(7.f, 1.1f, 1.f), body, particles);
+			//position.x = -position.x;
+			body.is_movable = false;
+			simulator->add_body(body, particles, position);
 		});
 }
 

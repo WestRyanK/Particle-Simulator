@@ -38,11 +38,12 @@ namespace CodeMonkeys::GranularSimulator
 		void plow_scene(float particle_radius, float particle_density);
 		void hourglass_scene(float particle_radius, float particle_density);
 		void ballsmash_scene(float particle_radius, float particle_density);
+		void avalanche_scene(float particle_radius, float particle_density);
 		void test_scene(float particle_radius, float particle_density);
 		void spawn_floor(GranularSubstanceSimulator* simulator, float floor_size, float particle_radius, float particle_density);
 
 	public:
-		GranularSubstance(Model3D* model, ShaderProgram* shader);
+		GranularSubstance(Model3D* model, ShaderProgram* shader, bool load_simulation, std::string filepath);
 		virtual void update(float dt);
 
 		// Inherited via IControllable

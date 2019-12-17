@@ -31,7 +31,9 @@ using namespace CodeMonkeys::GranularSimulator;
 using namespace std;
 
 
-GranularSimulatorEngine::GranularSimulatorEngine(GLFWwindow* window, GLuint width, GLuint height) : GameEngine(window, width, height)
+GranularSimulatorEngine::GranularSimulatorEngine(GLFWwindow* window, GLuint width, GLuint height, std::vector<std::string> settings) : 
+	GameEngine(window, width, height),
+	settings(settings)
 {
 }
 
@@ -53,7 +55,15 @@ void GranularSimulatorEngine::init_simulator(ShaderProgram* shader)
     LoadModel("Assets", "sphere.obj", *ml_model);
 	Model3D* model = new Model3D(ml_model, materials);
 
-	GranularSubstance* substance = new GranularSubstance(model, shader);
+	bool load_simulation = false;
+	std::string filepath = "";
+	if (this->settings.size() == 3)
+	{
+		load_simulation = (this->settings[1] == "-load");
+		filepath = this->settings[2];
+	}
+
+	GranularSubstance* substance = new GranularSubstance(model, shader, load_simulation, filepath);
 	this->world_root->add_child(substance);
 
     auto keyboard_controller = new KeyboardController(substance, this->get_window());
