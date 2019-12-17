@@ -24,12 +24,14 @@ namespace CodeMonkeys::GranularSimulator
 		std::vector<glm::vec3> body_positions;
 		std::vector<glm::vec3> body_velocities;
 
-		std::vector<glm::mat4> body_rotations;
+		// http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/
+		// http://sjbrown.co.uk/2002/05/01/representing-rotations-in-quaternion-arithmetic/
+		std::vector<glm::quat> body_orientations;
 		std::vector<glm::vec3> body_angular_velocities;
 
 		State(unsigned int particle_count, unsigned int body_count);
 		void update_particle_positions(const std::vector<Body>& bodies, const std::vector<Particle>& particles);
-		glm::mat4 rotate(glm::mat4 rotation_matrix, glm::vec3 rotation) const;
+		glm::quat rotate(glm::quat orientation_quat, glm::vec3 rotation) const;
 		static State interpolate_between_states(const State& state_a, const State& state_b, float time_at_interpolation);
 	};
 
@@ -38,7 +40,7 @@ namespace CodeMonkeys::GranularSimulator
 		std::vector<glm::vec3> body_positions_dt;
 		std::vector<glm::vec3> body_velocities_dt;
 
-		std::vector<glm::vec3> body_rotations_dt;
+		std::vector<glm::vec3> body_orientations_dt;
 		std::vector<glm::vec3> body_angular_velocities_dt;
 
 		StateDerivative(unsigned int body_count);

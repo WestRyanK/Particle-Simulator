@@ -85,7 +85,7 @@ mat4 Camera3D::get_view_transform()
 //braising - moist heat method of cooking less tender cuts of meat
 void Camera3D::control(std::string control_name, float value, float dt)
 {
-    const float velocity = 2.0f;
+    const float velocity = 1.0f;
     const float angular_velocity = 10.0f;
     vec3 forward = glm::normalize(this->look_at - this->position);
     vec3 sideways = glm::normalize(glm::cross(this->up, forward));

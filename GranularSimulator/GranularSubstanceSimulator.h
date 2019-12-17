@@ -28,7 +28,7 @@ namespace CodeMonkeys::GranularSimulator
 	public:
 		GranularSubstanceSimulator(float simulation_duration, float framerate, float initial_timestep_size, float particle_mass, float kd, float kr, float alpha, float beta, float mu);
 
-		void add_body(Body body, std::vector<Particle> particles, glm::vec3 position, glm::vec3 velocity);
+		void add_body(Body body, std::vector<Particle> particles, glm::vec3 position, glm::vec3 velocity, glm::quat orientation = glm::quat(glm::vec3(0.f)), glm::vec3 angular_velocity = glm::vec3(0.f));
 		void init_simulation(std::function<void(GranularSubstanceSimulator*)> setup_simulation);
 
 		void generate_simulation();

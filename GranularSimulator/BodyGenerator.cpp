@@ -88,7 +88,7 @@ glm::vec3 BodyGenerator::generate_tetrahedron_grain(float base_particle_radius, 
 
 glm::vec3 BodyGenerator::generate_cube_grain(float base_particle_radius, float particle_density, Body& out_body, std::vector<Particle>& out_particles)
 {
-	const float CORNER = 1.f / glm::sqrt(3.f);
+	const float CORNER = (1.f / glm::sqrt(3.f));
 	out_particles.push_back(Particle(base_particle_radius, glm::vec3(0.f, 0.f, 0.f) * base_particle_radius));
 	out_particles.push_back(Particle(base_particle_radius * CUBE_GRAIN_CORNER_PARTICLE_RATIO, glm::vec3(CORNER, CORNER, CORNER) * base_particle_radius * (1.f + CUBE_GRAIN_CORNER_PARTICLE_RATIO)));
 	out_particles.push_back(Particle(base_particle_radius * CUBE_GRAIN_CORNER_PARTICLE_RATIO, glm::vec3(CORNER, CORNER, -CORNER) * base_particle_radius * (1.f + CUBE_GRAIN_CORNER_PARTICLE_RATIO)));
@@ -125,8 +125,11 @@ glm::vec3 BodyGenerator::generate_sphere_grain(float base_particle_radius, float
 //
 glm::vec3 BodyGenerator::generate_plane(float base_particle_radius, float particle_density, glm::vec3 corner_a, glm::vec3 corner_b, glm::vec3 corner_c, Body& out_body, std::vector<Particle>& out_particles)
 {
-	unsigned int plane_particles_width = (unsigned int)(glm::length(corner_b - corner_a) / (base_particle_radius * 2));
-	unsigned int plane_particles_height = (unsigned int)(glm::length(corner_c - corner_a) / (base_particle_radius * 2));
+
+	// Try making particles less spread out!
+	float multiplier = 1.5f;
+	unsigned int plane_particles_width = (unsigned int)(glm::length(corner_b - corner_a) / (base_particle_radius * multiplier));
+	unsigned int plane_particles_height = (unsigned int)(glm::length(corner_c - corner_a) / (base_particle_radius * multiplier));
 	glm::vec3 x_direction = glm::normalize(corner_b - corner_a);
 	glm::vec3 y_direction = glm::normalize(corner_c - corner_a);
 
@@ -134,7 +137,7 @@ glm::vec3 BodyGenerator::generate_plane(float base_particle_radius, float partic
 	{
 		for (unsigned int x = 0; x < plane_particles_width; x++)
 		{
-			out_particles.push_back(Particle(base_particle_radius, corner_a + x_direction * base_particle_radius * (2.f * x) + y_direction * base_particle_radius * (2.f * y)));
+			out_particles.push_back(Particle(base_particle_radius, corner_a + x_direction * base_particle_radius * (multiplier * x) + y_direction * base_particle_radius * (multiplier * y)));
 		}
 	}
 
